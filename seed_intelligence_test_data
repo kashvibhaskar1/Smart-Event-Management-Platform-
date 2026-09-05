@@ -1,0 +1,260 @@
+"""
+seed_intelligence_test_data.py
+
+Creates real, connected data specifically designed to trigger every
+detector in the Intelligence Engine (intelligence_engine.py), so you
+can visit /intelligence right after running this and actually see
+alerts appear — not just read about what they would look like.
+
+Two detectors are TIME-SENSITIVE (Registration Surge, Check-in Queue),
+so this script calculates their timestamps relative to the moment you
+run it, not a fixed date. Visit /intelligence within a few minutes of
+running this for the full effect — after ~30 minutes, the check-in
+queue alert will naturally stop triggering (the session will have
+"started" in the past), which is correct, expected behavior, not a bug.
+
+Run with:
+    python seed_intelligence_test_data.py
+
+Safe to re-run — everything is checked by a distinctive name/title
+before inserting, so running it twice won't create duplicates. Running
+it again DOES refresh the time-sensitive session's start time back to
+"15 minutes from now", so you can re-trigger the check-in queue alert
+whenever you want just by re-running this script.
+"""
+
+from datetime import datetime, timedelta, date
+
+from app import app
+from models import db, Venue, Speaker, Session, Attendee, Sponsor, SponsorDeliverable, Incident
+
+TODAY = date.today()
+
+
+def get_or_create_venue(name, location, capacity):
+    v = Venue.query.filter_by(name=name).first()
+    if v:
+        return v, False
+    v = Venue(name=name, location=location, capacity=capacity, venue_type="Hall", cost=0.0, availability=True)
+    db.session.add(v)
+    db.session.flush()
+    return v, True
+
+
+def get_or_create_speaker(name, email, expertise):
+    sp = Speaker.query.filter_by(email=email).first()
+    if sp:
+        return sp, False
+    sp = Speaker(name=name, email=email, expertise=expertise, availability=True)
+    db.session.add(sp)
+    db.session.flush()
+    return sp, True
+
+
+def get_or_create_session(title, **kwargs):
+    s = Session.query.filter_by(title=title).first()
+    if s:
+        for k, v in kwargs.items():
+            setattr(s, k, v)
+        return s, False
+    s = Session(title=title, **kwargs)
+    db.session.add(s)
+    db.session.flush()
+    return s, True
+
+
+def get_or_create_attendee(email, **kwargs):
+    a = Attendee.query.filter_by(email=email).first()
+    if a:
+        return a, False
+    a = Attendee(email=email, **kwargs)
+    db.session.add(a)
+    db.session.flush()
+    return a, True
+
+
+def seed():
+    with app.app_context():
+        created, skipped = 0, 0
+        now = datetime.utcnow()
+
+        # ============================================================
+        # 1 & 2. VENUE CAPACITY (Warning + Critical) — two small venues,
+        # deliberately over-filled with real registered attendees.
+        # ============================================================
+        warn_venue, c = get_or_create_venue("Intelligence Test: Warning Hall", "Wing A", capacity=10)
+        created += c
+        crit_venue, c = get_or_create_venue("Intelligence Test: Critical Hall", "Wing B", capacity=10)
+        created += c
+
+        warn_session, c = get_or_create_session(
+            "Intelligence Test: Near-Capacity Session",
+            description="Seeded to trigger a Warning-level Venue Capacity alert (~90%).",
+            date=TODAY, start_time=(now + timedelta(hours=3)).time(), end_time=(now + timedelta(hours=4)).time(),
+            venue_id=warn_venue.id, status="Scheduled",
+        )
+        created += c
+        crit_session, c = get_or_create_session(
+            "Intelligence Test: Over-Capacity Session",
+            description="Seeded to trigger a Critical-level Venue Capacity alert (>100%).",
+            date=TODAY, start_time=(now + timedelta(hours=3)).time(), end_time=(now + timedelta(hours=4)).time(),
+            venue_id=crit_venue.id, status="Scheduled",
+        )
+        created += c
+
+        # 9 real attendees into the 10-capacity Warning session -> 90%
+        for i in range(1, 10):
+            _, c = get_or_create_attendee(
+                email=f"intel.warn{i}@testdata.com",
+                fullname=f"Warning Test Attendee {i}", phone=f"9000{i:06d}", age=28, gender="Other",
+                organization="Intelligence Test Co", interest="Technology", city="Bangalore", state="Karnataka",
+                registration_time=now - timedelta(hours=2), session_id=warn_session.id,
+            )
+            created += c
+
+        # 11 real attendees into the 10-capacity Critical session -> 110%
+        for i in range(1, 12):
+            _, c = get_or_create_attendee(
+                email=f"intel.crit{i}@testdata.com",
+                fullname=f"Critical Test Attendee {i}", phone=f"9001{i:06d}", age=31, gender="Other",
+                organization="Intelligence Test Co", interest="Technology", city="Bangalore", state="Karnataka",
+                registration_time=now - timedelta(hours=2), session_id=crit_session.id,
+            )
+            created += c
+
+        # ============================================================
+        # 3. CHECK-IN QUEUE — a session starting in 15 minutes, with
+        # several real attendees who have NOT checked in yet.
+        # ============================================================
+        queue_venue, c = get_or_create_venue("Intelligence Test: Queue Hall", "Wing C", capacity=50)
+        created += c
+        queue_session, c = get_or_create_session(
+            "Intelligence Test: Starting-Soon Session",
+            description="Seeded to trigger a Check-in Queue alert — starts in 15 min, most attendees not checked in.",
+            date=TODAY, start_time=(now + timedelta(minutes=15)).time(), end_time=(now + timedelta(minutes=75)).time(),
+            venue_id=queue_venue.id, status="Scheduled",
+        )
+        created += c
+        for i in range(1, 13):
+            _, c = get_or_create_attendee(
+                email=f"intel.queue{i}@testdata.com",
+                fullname=f"Queue Test Attendee {i}", phone=f"9002{i:06d}", age=26, gender="Other",
+                organization="Intelligence Test Co", interest="Technology", city="Bangalore", state="Karnataka",
+                registration_time=now - timedelta(hours=3), session_id=queue_session.id,
+                # deliberately no check_in_time — that's the whole point of this alert
+            )
+            created += c
+
+        # ============================================================
+        # 4. REGISTRATION SURGE — 6 real registrations in the last
+        # 15 minutes, vs only 2 in the 15-30-minutes-ago window.
+        # ============================================================
+        for i, minutes_ago in enumerate([1, 3, 5, 7, 9, 11], start=1):
+            _, c = get_or_create_attendee(
+                email=f"intel.surge.recent{i}@testdata.com",
+                fullname=f"Surge Recent Attendee {i}", phone=f"9003{i:06d}", age=24, gender="Other",
+                organization="Intelligence Test Co", interest="Technology", city="Bangalore", state="Karnataka",
+                registration_time=now - timedelta(minutes=minutes_ago),
+            )
+            created += c
+        for i, minutes_ago in enumerate([20, 26], start=1):
+            _, c = get_or_create_attendee(
+                email=f"intel.surge.older{i}@testdata.com",
+                fullname=f"Surge Older Attendee {i}", phone=f"9004{i:06d}", age=24, gender="Other",
+                organization="Intelligence Test Co", interest="Technology", city="Bangalore", state="Karnataka",
+                registration_time=now - timedelta(minutes=minutes_ago),
+            )
+            created += c
+
+        # ============================================================
+        # 5. SESSION CONFLICT — same speaker double-booked into two
+        # overlapping sessions on the same day.
+        # ============================================================
+        conflict_speaker, c = get_or_create_speaker(
+            "Intelligence Test Speaker", "intel.conflict.speaker@testdata.com", "General"
+        )
+        created += c
+        conflict_venue, c = get_or_create_venue("Intelligence Test: Conflict Room", "Wing D", capacity=30)
+        created += c
+        _, c = get_or_create_session(
+            "Intelligence Test: Conflict Session A",
+            description="Seeded to trigger a Session Conflict alert.",
+            date=TODAY, start_time=(now + timedelta(hours=5)).time(), end_time=(now + timedelta(hours=6)).time(),
+            venue_id=conflict_venue.id, speaker_id=conflict_speaker.id, status="Scheduled",
+        )
+        created += c
+        _, c = get_or_create_session(
+            "Intelligence Test: Conflict Session B",
+            description="Seeded to trigger a Session Conflict alert (overlaps with Session A, same speaker).",
+            date=TODAY, start_time=(now + timedelta(hours=5, minutes=30)).time(), end_time=(now + timedelta(hours=6, minutes=30)).time(),
+            venue_id=conflict_venue.id, speaker_id=conflict_speaker.id, status="Scheduled",
+        )
+        created += c
+
+        # ============================================================
+        # 6. HIGH-SEVERITY INCIDENT — one active Critical incident.
+        # ============================================================
+        if not Incident.query.filter_by(title="Intelligence Test: Critical Fire Alarm").first():
+            db.session.add(Incident(
+                title="Intelligence Test: Critical Fire Alarm",
+                description="Seeded to trigger a High-Severity Incident alert.",
+                category="Safety", location="Main Entrance",
+                severity="Critical", status="Logged", reported_time=now - timedelta(minutes=10),
+            ))
+            created += 1
+        else:
+            skipped += 1
+
+        # ============================================================
+        # 7. REPEATED INCIDENTS — 3 Technical incidents within 24h.
+        # ============================================================
+        for i, hours_ago in enumerate([1, 6, 18], start=1):
+            title = f"Intelligence Test: Repeated Technical Issue {i}"
+            if not Incident.query.filter_by(title=title).first():
+                db.session.add(Incident(
+                    title=title, description="Seeded to trigger a Repeated Incidents alert.",
+                    category="Technical", location="Hall B",
+                    severity="Low", status="Resolved", reported_time=now - timedelta(hours=hours_ago),
+                    resolved_at=now - timedelta(hours=hours_ago - 0.5),
+                ))
+                created += 1
+            else:
+                skipped += 1
+
+        # ============================================================
+        # 8. SPONSOR RISK — a sponsor with no payment and an incomplete
+        # deliverable, so compute_sponsor_performance() scores it "At Risk".
+        # ============================================================
+        risk_sponsor = Sponsor.query.filter_by(company_name="Intelligence Test: At-Risk Sponsor Co").first()
+        if not risk_sponsor:
+            risk_sponsor = Sponsor(
+                company_name="Intelligence Test: At-Risk Sponsor Co",
+                contact_person="Test Contact", email="intel.sponsor@testdata.com",
+                package="Silver", total_amount=200000.0, amount_paid=0.0,
+                contract_status="Pending", overall_status="Active",
+            )
+            db.session.add(risk_sponsor)
+            db.session.flush()
+            created += 1
+        else:
+            skipped += 1
+
+        if not SponsorDeliverable.query.filter_by(sponsor_id=risk_sponsor.id, name="Logo on banner").first():
+            db.session.add(SponsorDeliverable(
+                sponsor_id=risk_sponsor.id, name="Logo on banner",
+                description="Seeded incomplete deliverable so delivery % scores low.",
+                status="Pending",
+            ))
+            created += 1
+        else:
+            skipped += 1
+
+        db.session.commit()
+        print(f"Done. Created {created} new record(s), skipped {skipped} already-existing record(s).")
+        print("Visit /intelligence now to see the alerts.")
+        print("Note: the Check-in Queue alert is time-sensitive — it stops firing")
+        print("about 30 minutes after you run this script. Re-run this script to reset it.")
+
+
+if __name__ == "__main__":
+    seed()

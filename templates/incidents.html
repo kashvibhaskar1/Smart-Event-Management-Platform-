@@ -1,0 +1,584 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Incidents | Registration Command Center</title>
+
+<!-- Google Fonts -->
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600;700&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+
+<!-- Bootstrap 5 -->
+<link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
+<!-- Bootstrap Icons -->
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.css">
+
+<!-- Custom Stylesheet -->
+<link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+</head>
+<body>
+
+<!-- ============ SIDEBAR OVERLAY (mobile) ============ -->
+<div class="sidebar-overlay" id="sidebarOverlay"></div>
+
+<!-- ============ SIDEBAR ============ -->
+<aside class="sidebar" id="sidebar">
+  <div class="sidebar-brand">
+    <div class="brand-mark">RI</div>
+    <div class="brand-text">
+      <div class="brand-title">Registration Intelligence</div>
+      <div class="brand-sub">Attendee Management</div>
+    </div>
+  </div>
+  <div class="sidebar-divider"></div>
+
+  <nav class="sidebar-nav">
+    <div class="sidebar-label">Main</div>
+    <a href="/dashboard" class="nav-item-link"><i class="bi bi-speedometer2"></i> Dashboard</a>
+    <a href="/register" class="nav-item-link"><i class="bi bi-person-plus"></i> Registrations</a>
+    <a href="/attendees" class="nav-item-link"><i class="bi bi-people"></i> Attendees</a>
+    <a href="/venues" class="nav-item-link"><i class="bi bi-building"></i> Venues</a>
+    <a href="/speakers" class="nav-item-link"><i class="bi bi-mic"></i> Speakers</a>
+    <a href="/sessions" class="nav-item-link"><i class="bi bi-calendar3"></i> Sessions</a>
+    <a href="/sponsors" class="nav-item-link"><i class="bi bi-briefcase"></i> Sponsors</a>
+    <a href="/incidents" class="nav-item-link active"><i class="bi bi-exclamation-triangle"></i> Incidents <span class="badge-mini">New</span></a>
+    <a href="/analytics" class="nav-item-link"><i class="bi bi-graph-up-arrow"></i> Analytics</a>
+
+    <div class="sidebar-label mt-3">Intelligence</div>
+    <a href="/intelligence" class="nav-item-link"><i class="bi bi-cpu"></i> Intelligence Engine <span class="badge-mini">New</span></a>
+    <a href="/ai_insights" class="nav-item-link"><i class="bi bi-stars"></i> AI Insights</a>
+    <a href="/email_logs" class="nav-item-link"><i class="bi bi-envelope-check"></i> Email Logs</a>
+
+    <div class="sidebar-label mt-3">System</div>
+    <a href="/settings" class="nav-item-link"><i class="bi bi-gear"></i> Settings</a>
+  </nav>
+
+  <div class="sidebar-footer">
+    <div class="upgrade-card">
+      <i class="bi bi-shield-check me-1"></i> All systems operational
+    </div>
+  </div>
+</aside>
+
+<!-- ============ TOPBAR ============ -->
+<header class="topbar">
+  <button class="sidebar-toggle-btn" id="sidebarToggle" aria-label="Toggle sidebar">
+    <i class="bi bi-list fs-5"></i>
+  </button>
+
+  <div class="search-wrap">
+    <i class="bi bi-search"></i>
+    <input type="text" class="search-input" placeholder="Search attendees, emails, IDs…">
+    <span class="search-kbd">⌘K</span>
+  </div>
+
+  <div class="topbar-right">
+    <button class="icon-btn" aria-label="Notifications">
+      <i class="bi bi-bell"></i>
+      <span class="ping-dot"></span>
+    </button>
+    <button class="icon-btn" aria-label="Help">
+      <i class="bi bi-question-circle"></i>
+    </button>
+
+    <div class="dropdown">
+      <div class="admin-profile" data-bs-toggle="dropdown" aria-expanded="false">
+        <div class="admin-avatar">AD</div>
+        <div class="admin-name">
+          <div class="name">Admin User</div>
+          <div class="role">Super Admin</div>
+        </div>
+        <i class="bi bi-chevron-down text-secondary" style="font-size:.7rem;"></i>
+      </div>
+      <ul class="dropdown-menu dropdown-menu-end mt-2">
+        <li><a class="dropdown-item" href="#"><i class="bi bi-person me-2"></i>Profile</a></li>
+        <li><a class="dropdown-item" href="/settings"><i class="bi bi-gear me-2"></i>Settings</a></li>
+        <li><hr class="dropdown-divider"></li>
+        <li><a class="dropdown-item" href="/logout"><i class="bi bi-box-arrow-right me-2"></i>Sign out</a></li>
+      </ul>
+    </div>
+  </div>
+</header>
+
+<!-- ============ MAIN CONTENT ============ -->
+<main class="main-content">
+
+  <div class="page-heading">
+    <div>
+      <div class="eyebrow">Incident Management</div>
+      <h1>Incidents</h1>
+      <p>Log, track and resolve incidents reported during the event.</p>
+    </div>
+    <div class="d-flex gap-2">
+      <a href="/incidents/export" class="btn-export">
+        <i class="bi bi-download"></i> Export Report
+      </a>
+      <button type="button" class="btn-primary-solid" data-bs-toggle="modal" data-bs-target="#addIncidentModal">
+        <i class="bi bi-plus-lg"></i> Add Incident
+      </button>
+    </div>
+  </div>
+
+  <!-- Flash messages -->
+  {% with messages = get_flashed_messages(with_categories=true) %}
+    {% if messages %}
+      {% for category, message in messages %}
+        <div class="alert-box {% if category == 'success' %}alert-success{% else %}alert-error{% endif %}" style="margin-bottom:1rem;">
+          <i class="bi {% if category == 'success' %}bi-check-circle-fill{% else %}bi-exclamation-triangle-fill{% endif %}"></i>
+          <span>{{ message }}</span>
+        </div>
+      {% endfor %}
+    {% endif %}
+  {% endwith %}
+
+  <!-- ============ INCIDENT OVERVIEW ============ -->
+  <div class="row g-3 mb-3 row-cols-2 row-cols-xl-5">
+    <div class="col">
+      <div class="stat-card">
+        <div class="stat-top">
+          <div class="stat-icon blue"><i class="bi bi-list-check"></i></div>
+        </div>
+        <div class="stat-value">{{ total_incidents }}</div>
+        <div class="stat-title">Total Incidents</div>
+      </div>
+    </div>
+    <div class="col">
+      <div class="stat-card">
+        <div class="stat-top">
+          <div class="stat-icon" style="background:var(--blue-soft);color:var(--blue);"><i class="bi bi-hourglass-split"></i></div>
+        </div>
+        <div class="stat-value" style="color:var(--blue);">{{ open_investigating_count }}</div>
+        <div class="stat-title">Open / Investigating</div>
+      </div>
+    </div>
+    <div class="col">
+      <div class="stat-card">
+        <div class="stat-top">
+          <div class="stat-icon" style="background:#FFF3EC;color:#EA580C;"><i class="bi bi-exclamation-triangle"></i></div>
+        </div>
+        <div class="stat-value" style="color:#EA580C;">{{ critical_high_count }}</div>
+        <div class="stat-title">Critical / High (active)</div>
+      </div>
+    </div>
+    <div class="col">
+      <div class="stat-card">
+        <div class="stat-top">
+          <div class="stat-icon" style="background:var(--danger-soft);color:var(--danger);"><i class="bi bi-exclamation-octagon-fill"></i></div>
+        </div>
+        <div class="stat-value" style="color:var(--danger);">{{ escalated_count }}</div>
+        <div class="stat-title">Escalated</div>
+      </div>
+    </div>
+    <div class="col">
+      <div class="stat-card">
+        <div class="stat-top">
+          <div class="stat-icon" style="background:var(--success-soft);color:var(--success);"><i class="bi bi-check-circle"></i></div>
+        </div>
+        <div class="stat-value" style="color:var(--success);">{{ resolved_closed_count }}</div>
+        <div class="stat-title">Resolved / Closed</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ============ EVENT OPERATIONAL EFFICIENCY ============ -->
+  <div class="row g-3 mb-3 row-cols-1 row-cols-md-3">
+    <div class="col">
+      <div class="stat-card">
+        <div class="stat-top">
+          <div class="stat-icon" style="background:var(--slate-soft);color:var(--slate);"><i class="bi bi-stopwatch"></i></div>
+        </div>
+        <div class="stat-value" style="{% if avg_log_to_investigate_hours is none %}font-size:1.1rem;color:var(--text-muted);{% endif %}">
+          {{ avg_log_to_investigate_hours ~ " hrs" if avg_log_to_investigate_hours is not none else "No data" }}
+        </div>
+        <div class="stat-title">Avg. Logged &rarr; Investigating</div>
+      </div>
+    </div>
+    <div class="col">
+      <div class="stat-card">
+        <div class="stat-top">
+          <div class="stat-icon" style="background:var(--slate-soft);color:var(--slate);"><i class="bi bi-stopwatch"></i></div>
+        </div>
+        <div class="stat-value" style="{% if avg_investigate_to_resolve_hours is none %}font-size:1.1rem;color:var(--text-muted);{% endif %}">
+          {{ avg_investigate_to_resolve_hours ~ " hrs" if avg_investigate_to_resolve_hours is not none else "No data" }}
+        </div>
+        <div class="stat-title">Avg. Investigating &rarr; Resolved</div>
+      </div>
+    </div>
+    <div class="col">
+      <div class="stat-card">
+        <div class="stat-top">
+          <div class="stat-icon" style="background:var(--slate-soft);color:var(--slate);"><i class="bi bi-hourglass-bottom"></i></div>
+        </div>
+        <div class="stat-value" style="{% if avg_total_resolution_hours is none %}font-size:1.1rem;color:var(--text-muted);{% endif %}">
+          {{ avg_total_resolution_hours ~ " hrs" if avg_total_resolution_hours is not none else "No data" }}
+        </div>
+        <div class="stat-title">Avg. Total Resolution Time</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ============ RECENT ACTIVE INCIDENTS ============ -->
+  <div class="table-panel mb-4">
+    <div class="panel-header">
+      <div>
+        <h2>Recent Active Incidents</h2>
+        <div class="panel-sub">Most recent incidents not yet Resolved or Closed</div>
+      </div>
+    </div>
+    <div class="table-responsive">
+      <table class="reg-table">
+        <thead>
+          <tr>
+            <th>Title</th>
+            <th>Severity</th>
+            <th>Priority</th>
+            <th>Status</th>
+            <th>Assigned To</th>
+          </tr>
+        </thead>
+        <tbody>
+          {% for inc in recent_active_incidents %}
+          <tr>
+            <td><a href="/incidents/{{ inc.id }}/view" style="font-weight:600;color:var(--text-primary);text-decoration:none;">{{ inc.title }}</a></td>
+            <td>
+              {% if inc.severity == "Critical" %}
+                <span class="status-badge" style="background:var(--danger-soft);color:var(--danger);"><span class="dot-sm" style="background:var(--danger);"></span>Critical</span>
+              {% elif inc.severity == "High" %}
+                <span class="status-badge" style="background:#FFF3EC;color:#EA580C;"><span class="dot-sm" style="background:#EA580C;"></span>High</span>
+              {% elif inc.severity == "Medium" %}
+                <span class="status-badge" style="background:var(--blue-soft);color:var(--blue);"><span class="dot-sm" style="background:var(--blue);"></span>Medium</span>
+              {% else %}
+                <span class="status-badge" style="background:var(--slate-soft);color:var(--slate);"><span class="dot-sm" style="background:var(--slate);"></span>Low</span>
+              {% endif %}
+            </td>
+            <td>
+              <span style="font-weight:700;{% if inc.priority == 'Urgent' %}color:var(--danger);{% endif %}">{{ inc.priority }}</span>
+            </td>
+            <td>
+              {% if inc.status == "Investigating" %}
+                <span class="status-badge" style="background:var(--blue-soft);color:var(--blue);"><span class="dot-sm" style="background:var(--blue);"></span>Investigating</span>
+              {% else %}
+                <span class="status-badge registered"><span class="dot-sm"></span>Logged</span>
+              {% endif %}
+            </td>
+            <td>{{ inc.assigned_to or "Unassigned" }}</td>
+          </tr>
+          {% else %}
+          <tr>
+            <td colspan="5">
+              <div class="empty-state">
+                <i class="bi bi-shield-check"></i>
+                No active incidents right now.
+              </div>
+            </td>
+          </tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    </div>
+  </div>
+
+  <!-- ============ INCIDENTS TABLE ============ -->
+  <div class="table-panel mb-4">
+    <div class="panel-header">
+      <div>
+        <h2>All Incidents</h2>
+        <div class="panel-sub">{{ incidents|length }} incident(s) on record</div>
+      </div>
+    </div>
+
+    <div class="table-responsive">
+      <table class="reg-table">
+        <thead>
+          <tr>
+            <th>Title</th>
+            <th>Category</th>
+            <th>Location</th>
+            <th>Reported</th>
+            <th>Severity</th>
+            <th>Priority</th>
+            <th>Status</th>
+            <th>Escalation</th>
+            <th>Assigned To</th>
+            <th class="text-end">Actions</th>
+          </tr>
+        </thead>
+        <tbody>
+          {% for inc in incidents %}
+          <tr>
+            <td>
+              <strong>{{ inc.title }}</strong>
+              {% if inc.description %}<div class="text-muted" style="font-size:.74rem;margin-top:.15rem;">{{ inc.description }}</div>{% endif %}
+            </td>
+            <td>{{ inc.category or "—" }}</td>
+            <td>{{ inc.location or "—" }}</td>
+            <td>{{ inc.reported_time.strftime('%d %b %Y, %I:%M %p') if inc.reported_time else "—" }}</td>
+            <td>
+              {% if inc.severity == "Critical" %}
+                <span class="status-badge" style="background:var(--danger-soft);color:var(--danger);"><span class="dot-sm" style="background:var(--danger);"></span>Critical</span>
+              {% elif inc.severity == "High" %}
+                <span class="status-badge" style="background:#FFF3EC;color:#EA580C;"><span class="dot-sm" style="background:#EA580C;"></span>High</span>
+              {% elif inc.severity == "Medium" %}
+                <span class="status-badge" style="background:var(--blue-soft);color:var(--blue);"><span class="dot-sm" style="background:var(--blue);"></span>Medium</span>
+              {% else %}
+                <span class="status-badge" style="background:var(--slate-soft);color:var(--slate);"><span class="dot-sm" style="background:var(--slate);"></span>Low</span>
+              {% endif %}
+            </td>
+            <td>
+              {% if inc.priority == "Urgent" %}
+                <span style="font-weight:700;color:var(--danger);font-size:.82rem;">Urgent</span>
+              {% else %}
+                <span style="font-weight:600;font-size:.82rem;">{{ inc.priority }}</span>
+              {% endif %}
+            </td>
+            <td>
+              {% if inc.status == "Closed" %}
+                <span class="status-badge checked-in"><span class="dot-sm"></span>Closed</span>
+              {% elif inc.status == "Resolved" %}
+                <span class="status-badge" style="background:var(--success-soft);color:var(--success);"><span class="dot-sm" style="background:var(--success);"></span>Resolved</span>
+              {% elif inc.status == "Investigating" %}
+                <span class="status-badge" style="background:var(--blue-soft);color:var(--blue);"><span class="dot-sm" style="background:var(--blue);"></span>Investigating</span>
+              {% else %}
+                <span class="status-badge registered"><span class="dot-sm"></span>Logged</span>
+              {% endif %}
+            </td>
+            <td>
+              {% if inc.is_escalated %}
+                <span class="status-badge" style="background:var(--danger-soft);color:var(--danger);"><i class="bi bi-exclamation-triangle-fill" style="font-size:.7rem;margin-right:.25rem;"></i>Escalated</span>
+              {% else %}
+                <span class="text-muted" style="font-size:.78rem;">—</span>
+              {% endif %}
+            </td>
+            <td>{{ inc.assigned_to or "Unassigned" }}</td>
+            <td class="text-end">
+              <div class="row-actions justify-content-end">
+                <a href="/incidents/{{ inc.id }}/view" class="action-btn" aria-label="View incident" title="View incident &amp; workflow">
+                  <i class="bi bi-eye"></i>
+                </a>
+                <button type="button" class="action-btn" data-bs-toggle="modal" data-bs-target="#editIncidentModal"
+                        data-inc-id="{{ inc.id }}"
+                        data-inc-title="{{ inc.title }}"
+                        data-inc-description="{{ inc.description or '' }}"
+                        data-inc-category="{{ inc.category or '' }}"
+                        data-inc-location="{{ inc.location or '' }}"
+                        data-inc-reported="{{ inc.reported_time.strftime('%Y-%m-%dT%H:%M') if inc.reported_time else '' }}"
+                        data-inc-severity="{{ inc.severity }}"
+                        data-inc-assigned="{{ inc.assigned_to or '' }}"
+                        data-inc-contact-person="{{ inc.contact_person or '' }}"
+                        data-inc-contact-phone="{{ inc.contact_phone or '' }}"
+                        data-inc-alt-contact="{{ inc.alternate_contact or '' }}"
+                        aria-label="Edit incident details" title="Edit incident details (not status)">
+                  <i class="bi bi-pencil"></i>
+                </button>
+                <form method="POST" action="/incidents/{{ inc.id }}/delete" onsubmit="return confirm('Delete incident \'{{ inc.title }}\'? This cannot be undone.');" style="display:inline;">
+                  <button type="submit" class="action-btn" aria-label="Delete incident" title="Delete incident">
+                    <i class="bi bi-trash"></i>
+                  </button>
+                </form>
+              </div>
+            </td>
+          </tr>
+          {% else %}
+          <tr>
+            <td colspan="10">
+              <div class="empty-state">
+                <i class="bi bi-shield-check"></i>
+                No incidents reported yet.
+              </div>
+            </td>
+          </tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    </div>
+  </div>
+
+</main>
+
+<!-- Add Incident Modal -->
+<div class="modal fade" id="addIncidentModal" tabindex="-1" aria-hidden="true">
+  <div class="modal-dialog">
+    <div class="modal-content" style="border-radius: var(--radius-lg); border: 1px solid var(--border);">
+      <form method="POST" action="/incidents/add">
+        <div class="modal-header">
+          <h5 class="modal-title">Add Incident</h5>
+          <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+        </div>
+        <div class="modal-body">
+          <div class="form-group full mb-3">
+            <label class="form-label" for="a_title">Title <span class="req">*</span></label>
+            <input type="text" class="form-input" id="a_title" name="title" placeholder="e.g. Overcrowding near main entrance" required>
+          </div>
+          <div class="form-group full mb-3">
+            <label class="form-label" for="a_description">Description</label>
+            <textarea class="form-input" id="a_description" name="description" rows="2" placeholder="What happened, and any relevant details…"></textarea>
+          </div>
+          <div class="row g-2 mb-3">
+            <div class="col-6">
+              <label class="form-label" for="a_category">Category</label>
+              <select class="form-input" id="a_category" name="category">
+                <option value="">— Select category —</option>
+                {% for c in categories %}
+                  <option value="{{ c }}">{{ c }}</option>
+                {% endfor %}
+              </select>
+            </div>
+            <div class="col-6">
+              <label class="form-label" for="a_location">Location</label>
+              <input type="text" class="form-input" id="a_location" name="location" placeholder="e.g. Grand Hall, Parking Lot B">
+            </div>
+          </div>
+          <div class="form-group full mb-3">
+            <label class="form-label" for="a_severity">Severity <span class="req">*</span></label>
+            <select class="form-input" id="a_severity" name="severity" required>
+              {% for sev in severities %}
+                <option value="{{ sev }}" {% if sev == "Low" %}selected{% endif %}>{{ sev }}</option>
+              {% endfor %}
+            </select>
+            <div class="text-muted" style="font-size:.72rem;margin-top:.3rem;">New incidents always start with status <strong>Logged</strong> — move them through the workflow from the incident's own page.</div>
+          </div>
+          <div class="row g-2 mb-3">
+            <div class="col-6">
+              <label class="form-label" for="a_assigned">Assigned To <span class="text-muted" style="font-weight:400;">(optional)</span></label>
+              <input type="text" class="form-input" id="a_assigned" name="assigned_to" placeholder="e.g. Security Team">
+            </div>
+            <div class="col-6">
+              <label class="form-label" for="a_reported">Reported Time <span class="text-muted" style="font-weight:400;">(defaults to now)</span></label>
+              <input type="datetime-local" class="form-input" id="a_reported" name="reported_time">
+            </div>
+          </div>
+          <div class="row g-2">
+            <div class="col-4">
+              <label class="form-label" for="a_contact_person">Contact Person <span class="text-muted" style="font-weight:400;">(optional)</span></label>
+              <input type="text" class="form-input" id="a_contact_person" name="contact_person">
+            </div>
+            <div class="col-4">
+              <label class="form-label" for="a_contact_phone">Contact Phone <span class="text-muted" style="font-weight:400;">(optional)</span></label>
+              <input type="text" class="form-input" id="a_contact_phone" name="contact_phone">
+            </div>
+            <div class="col-4">
+              <label class="form-label" for="a_alt_contact">Alternate Contact <span class="text-muted" style="font-weight:400;">(optional)</span></label>
+              <input type="text" class="form-input" id="a_alt_contact" name="alternate_contact">
+            </div>
+          </div>
+        </div>
+        <div class="modal-footer">
+          <button type="button" class="btn-export" data-bs-dismiss="modal">Cancel</button>
+          <button type="submit" class="btn-primary-solid"><i class="bi bi-check2-circle"></i> Save Incident</button>
+        </div>
+      </form>
+    </div>
+  </div>
+</div>
+
+<!-- Edit Incident Modal -->
+<div class="modal fade" id="editIncidentModal" tabindex="-1" aria-hidden="true">
+  <div class="modal-dialog">
+    <div class="modal-content" style="border-radius: var(--radius-lg); border: 1px solid var(--border);">
+      <form method="POST" id="editIncidentForm" action="/incidents/0/edit">
+        <div class="modal-header">
+          <h5 class="modal-title">View / Edit Incident</h5>
+          <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+        </div>
+        <div class="modal-body">
+          <div class="form-group full mb-3">
+            <label class="form-label" for="e_title">Title <span class="req">*</span></label>
+            <input type="text" class="form-input" id="e_title" name="title" required>
+          </div>
+          <div class="form-group full mb-3">
+            <label class="form-label" for="e_description">Description</label>
+            <textarea class="form-input" id="e_description" name="description" rows="2"></textarea>
+          </div>
+          <div class="row g-2 mb-3">
+            <div class="col-6">
+              <label class="form-label" for="e_category">Category</label>
+              <select class="form-input" id="e_category" name="category">
+                <option value="">— Select category —</option>
+                {% for c in categories %}
+                  <option value="{{ c }}">{{ c }}</option>
+                {% endfor %}
+              </select>
+            </div>
+            <div class="col-6">
+              <label class="form-label" for="e_location">Location</label>
+              <input type="text" class="form-input" id="e_location" name="location">
+            </div>
+          </div>
+          <div class="form-group full mb-3">
+            <label class="form-label" for="e_severity">Severity <span class="req">*</span></label>
+            <select class="form-input" id="e_severity" name="severity" required>
+              {% for sev in severities %}
+                <option value="{{ sev }}">{{ sev }}</option>
+              {% endfor %}
+            </select>
+          </div>
+          <div class="row g-2 mb-3">
+            <div class="col-6">
+              <label class="form-label" for="e_assigned">Assigned To <span class="text-muted" style="font-weight:400;">(optional)</span></label>
+              <input type="text" class="form-input" id="e_assigned" name="assigned_to">
+            </div>
+            <div class="col-6">
+              <label class="form-label" for="e_reported">Reported Time</label>
+              <input type="datetime-local" class="form-input" id="e_reported" name="reported_time">
+            </div>
+          </div>
+          <div class="row g-2">
+            <div class="col-4">
+              <label class="form-label" for="e_contact_person">Contact Person <span class="text-muted" style="font-weight:400;">(optional)</span></label>
+              <input type="text" class="form-input" id="e_contact_person" name="contact_person">
+            </div>
+            <div class="col-4">
+              <label class="form-label" for="e_contact_phone">Contact Phone <span class="text-muted" style="font-weight:400;">(optional)</span></label>
+              <input type="text" class="form-input" id="e_contact_phone" name="contact_phone">
+            </div>
+            <div class="col-4">
+              <label class="form-label" for="e_alt_contact">Alternate Contact <span class="text-muted" style="font-weight:400;">(optional)</span></label>
+              <input type="text" class="form-input" id="e_alt_contact" name="alternate_contact">
+            </div>
+          </div>
+        </div>
+        <div class="modal-footer">
+          <button type="button" class="btn-export" data-bs-dismiss="modal">Cancel</button>
+          <button type="submit" class="btn-primary-solid"><i class="bi bi-check2-circle"></i> Save Changes</button>
+        </div>
+      </form>
+    </div>
+  </div>
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+<script>
+  const sidebar = document.getElementById('sidebar');
+  const overlay = document.getElementById('sidebarOverlay');
+  document.getElementById('sidebarToggle')?.addEventListener('click', () => {
+    sidebar.classList.toggle('show');
+    overlay.classList.toggle('show');
+  });
+  overlay?.addEventListener('click', () => {
+    sidebar.classList.remove('show');
+    overlay.classList.remove('show');
+  });
+
+  // Populate the Edit Incident modal from the clicked row's data-* attributes
+  document.getElementById('editIncidentModal').addEventListener('show.bs.modal', function(event) {
+    const btn = event.relatedTarget;
+    const incId = btn.getAttribute('data-inc-id');
+
+    document.getElementById('editIncidentForm').action = `/incidents/${incId}/edit`;
+    document.getElementById('e_title').value = btn.getAttribute('data-inc-title');
+    document.getElementById('e_description').value = btn.getAttribute('data-inc-description');
+    document.getElementById('e_category').value = btn.getAttribute('data-inc-category');
+    document.getElementById('e_location').value = btn.getAttribute('data-inc-location');
+    document.getElementById('e_reported').value = btn.getAttribute('data-inc-reported');
+    document.getElementById('e_severity').value = btn.getAttribute('data-inc-severity');
+    document.getElementById('e_assigned').value = btn.getAttribute('data-inc-assigned');
+    document.getElementById('e_contact_person').value = btn.getAttribute('data-inc-contact-person');
+    document.getElementById('e_contact_phone').value = btn.getAttribute('data-inc-contact-phone');
+    document.getElementById('e_alt_contact').value = btn.getAttribute('data-inc-alt-contact');
+  });
+</script>
+
+</body>
+</html>

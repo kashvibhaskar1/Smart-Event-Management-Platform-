@@ -1,0 +1,203 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Intelligence Engine | Registration Command Center</title>
+
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600;700&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+
+<link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.css">
+
+<link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+</head>
+<body>
+
+<div class="sidebar-overlay" id="sidebarOverlay"></div>
+
+<aside class="sidebar" id="sidebar">
+  <div class="sidebar-brand">
+    <div class="brand-mark">RI</div>
+    <div class="brand-text">
+      <div class="brand-title">Registration Intelligence</div>
+      <div class="brand-sub">Attendee Management</div>
+    </div>
+  </div>
+  <div class="sidebar-divider"></div>
+
+  <nav class="sidebar-nav">
+    <div class="sidebar-label">Main</div>
+    <a href="/dashboard" class="nav-item-link"><i class="bi bi-speedometer2"></i> Dashboard</a>
+    <a href="/register" class="nav-item-link"><i class="bi bi-person-plus"></i> Registrations</a>
+    <a href="/attendees" class="nav-item-link"><i class="bi bi-people"></i> Attendees</a>
+    <a href="/venues" class="nav-item-link"><i class="bi bi-building"></i> Venues</a>
+    <a href="/speakers" class="nav-item-link"><i class="bi bi-mic"></i> Speakers</a>
+    <a href="/sessions" class="nav-item-link"><i class="bi bi-calendar3"></i> Sessions</a>
+    <a href="/sponsors" class="nav-item-link"><i class="bi bi-briefcase"></i> Sponsors</a>
+    <a href="/incidents" class="nav-item-link"><i class="bi bi-exclamation-triangle"></i> Incidents</a>
+    <a href="/analytics" class="nav-item-link"><i class="bi bi-graph-up-arrow"></i> Analytics</a>
+
+    <div class="sidebar-label mt-3">Intelligence</div>
+    <a href="/intelligence" class="nav-item-link active"><i class="bi bi-cpu"></i> Intelligence Engine <span class="badge-mini">New</span></a>
+    <a href="/ai_insights" class="nav-item-link"><i class="bi bi-stars"></i> AI Insights</a>
+    <a href="/email_logs" class="nav-item-link"><i class="bi bi-envelope-check"></i> Email Logs</a>
+
+    <div class="sidebar-label mt-3">System</div>
+    <a href="/settings" class="nav-item-link"><i class="bi bi-gear"></i> Settings</a>
+  </nav>
+
+  <div class="sidebar-footer">
+    <div class="upgrade-card">
+      <i class="bi bi-shield-check me-1"></i> All systems operational
+    </div>
+  </div>
+</aside>
+
+<header class="topbar">
+  <button class="sidebar-toggle-btn" id="sidebarToggle" aria-label="Toggle sidebar">
+    <i class="bi bi-list fs-5"></i>
+  </button>
+  <div class="search-wrap">
+    <i class="bi bi-search"></i>
+    <input type="text" class="search-input" placeholder="Search attendees, emails, IDs…">
+  </div>
+  <div class="topbar-right">
+    <div class="dropdown">
+      <div class="admin-profile" data-bs-toggle="dropdown" aria-expanded="false">
+        <div class="admin-avatar">AD</div>
+        <div class="admin-name">
+          <div class="name">Admin User</div>
+          <div class="role">Super Admin</div>
+        </div>
+        <i class="bi bi-chevron-down text-secondary" style="font-size:.7rem;"></i>
+      </div>
+      <ul class="dropdown-menu dropdown-menu-end mt-2">
+        <li><a class="dropdown-item" href="/logout"><i class="bi bi-box-arrow-right me-2"></i>Sign out</a></li>
+      </ul>
+    </div>
+  </div>
+</header>
+
+<main class="main-content">
+
+  <div class="page-heading">
+    <div>
+      <h1>Intelligence Engine</h1>
+      <p>Cross-module risk detection and recommendations, computed fresh from real data on every load. This is a functional test view — the full Executive Dashboard comes in a later part.</p>
+    </div>
+  </div>
+
+  {% with messages = get_flashed_messages(with_categories=true) %}
+    {% if messages %}
+      {% for category, message in messages %}
+        <div class="alert-box {% if category == 'success' %}alert-success{% else %}alert-error{% endif %}" style="margin-bottom:1rem;">
+          <i class="bi {% if category == 'success' %}bi-check-circle-fill{% else %}bi-exclamation-triangle-fill{% endif %}"></i>
+          <span>{{ message }}</span>
+        </div>
+      {% endfor %}
+    {% endif %}
+  {% endwith %}
+
+  <div class="row g-3 mb-3 row-cols-2 row-cols-xl-3">
+    <div class="col">
+      <div class="stat-card">
+        <div class="stat-top"><div class="stat-icon" style="background:var(--danger-soft);color:var(--danger);"><i class="bi bi-exclamation-octagon-fill"></i></div></div>
+        <div class="stat-value" style="color:var(--danger);">{{ alerts|selectattr("severity","equalto","Critical")|list|length }}</div>
+        <div class="stat-title">Critical Alerts</div>
+      </div>
+    </div>
+    <div class="col">
+      <div class="stat-card">
+        <div class="stat-top"><div class="stat-icon" style="background:#FFF3EC;color:#EA580C;"><i class="bi bi-exclamation-triangle-fill"></i></div></div>
+        <div class="stat-value" style="color:#EA580C;">{{ alerts|selectattr("severity","equalto","Warning")|list|length }}</div>
+        <div class="stat-title">Warning Alerts</div>
+      </div>
+    </div>
+    <div class="col">
+      <div class="stat-card">
+        <div class="stat-top"><div class="stat-icon blue"><i class="bi bi-people"></i></div></div>
+        <div class="stat-value">{{ total_attendees }}</div>
+        <div class="stat-title">Total Attendees Monitored</div>
+      </div>
+    </div>
+  </div>
+
+  <div class="table-panel mb-4">
+    <div class="panel-header">
+      <div>
+        <h2>Active Alerts</h2>
+        <div class="panel-sub">Detected from real registration, check-in, venue, session, sponsor and incident data</div>
+      </div>
+    </div>
+    <div class="table-responsive">
+      <table class="reg-table">
+        <thead>
+          <tr>
+            <th>Type</th>
+            <th>Severity</th>
+            <th>Message</th>
+            <th>Source</th>
+            <th>Recommendation</th>
+            <th>Detected</th>
+            <th class="text-end">Actions</th>
+          </tr>
+        </thead>
+        <tbody>
+          {% for a in alerts %}
+          <tr>
+            <td><strong>{{ a.alert_type }}</strong></td>
+            <td>
+              {% if a.severity == "Critical" %}
+                <span class="status-badge" style="background:var(--danger-soft);color:var(--danger);"><span class="dot-sm" style="background:var(--danger);"></span>Critical</span>
+              {% elif a.severity == "Warning" %}
+                <span class="status-badge" style="background:#FFF3EC;color:#EA580C;"><span class="dot-sm" style="background:#EA580C;"></span>Warning</span>
+              {% else %}
+                <span class="status-badge" style="background:var(--blue-soft);color:var(--blue);"><span class="dot-sm" style="background:var(--blue);"></span>Informational</span>
+              {% endif %}
+            </td>
+            <td style="max-width:260px;">{{ a.message }}</td>
+            <td>{{ a.source_module }}</td>
+            <td style="max-width:260px;color:var(--blue);">{{ a.recommendation or "—" }}</td>
+            <td>{{ a.detected_at.strftime('%d %b, %I:%M %p') if a.detected_at else "—" }}</td>
+            <td class="text-end">
+              <form method="POST" action="/intelligence/alerts/{{ a.id }}/acknowledge" style="display:inline;">
+                <button type="submit" class="btn-export" style="font-size:.76rem;padding:.4rem .8rem;">
+                  <i class="bi bi-check2"></i> Acknowledge
+                </button>
+              </form>
+            </td>
+          </tr>
+          {% else %}
+          <tr>
+            <td colspan="7">
+              <div class="empty-state">
+                <i class="bi bi-shield-check"></i>
+                No risks currently detected across the event.
+              </div>
+            </td>
+          </tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    </div>
+  </div>
+
+</main>
+
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+<script>
+  const sidebar = document.getElementById('sidebar');
+  const overlay = document.getElementById('sidebarOverlay');
+  document.getElementById('sidebarToggle')?.addEventListener('click', () => {
+    sidebar.classList.toggle('show'); overlay.classList.toggle('show');
+  });
+  overlay?.addEventListener('click', () => {
+    sidebar.classList.remove('show'); overlay.classList.remove('show');
+  });
+</script>
+
+</body>
+</html>

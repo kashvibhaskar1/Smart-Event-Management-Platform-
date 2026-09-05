@@ -1,0 +1,251 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>My Registration Status | Registration Intelligence</title>
+
+<!-- Google Fonts -->
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600;700&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+
+<!-- Bootstrap 5 -->
+<link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
+<!-- Bootstrap Icons -->
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.css">
+
+<!-- Custom Stylesheet -->
+<link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+
+<!-- Page-only styles (scoped here so style.css stays untouched — same
+     pattern already used by success.html for its info-card component) -->
+<style>
+  .info-card{
+    background: var(--surface-alt);
+    border: 1px solid var(--border);
+    border-radius: var(--radius-lg);
+    padding: 1.5rem 1.6rem;
+    margin-bottom: 1.6rem;
+  }
+  .info-card-title{
+    font-size: .72rem;
+    font-weight: 600;
+    letter-spacing: .6px;
+    text-transform: uppercase;
+    color: var(--text-muted);
+    margin-bottom: 1rem;
+  }
+  .info-grid{
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 1.1rem 1.5rem;
+  }
+  .info-item{ min-width: 0; }
+  .info-item-label{
+    display: flex;
+    align-items: center;
+    gap: .4rem;
+    font-size: .72rem;
+    font-weight: 600;
+    color: var(--text-muted);
+    margin-bottom: .25rem;
+  }
+  .info-item-label i{ color: var(--blue); font-size: .8rem; }
+  .info-item-value{
+    font-size: .88rem;
+    font-weight: 600;
+    color: var(--text-primary);
+    word-break: break-word;
+  }
+  .checkin-box{
+    text-align: center;
+    border: 1px dashed var(--border);
+    border-radius: var(--radius-lg);
+    padding: 1.6rem 1.4rem;
+    margin-bottom: 1rem;
+  }
+  .checkin-box .state-label{
+    font-size: 1.05rem;
+    font-weight: 700;
+    color: var(--text-primary);
+    margin-bottom: .3rem;
+  }
+  .checkin-box .state-time{
+    font-size: .84rem;
+    color: var(--text-secondary);
+    margin-bottom: 1rem;
+  }
+  .sponsor-row{
+    border: 1px solid var(--border);
+    border-radius: var(--radius-md);
+    padding: .9rem 1rem;
+    margin-bottom: .7rem;
+  }
+  .sponsor-row .sponsor-name{
+    font-size: .9rem;
+    font-weight: 700;
+    color: var(--text-primary);
+  }
+  .sponsor-row .sponsor-package{
+    font-size: .74rem;
+    color: var(--text-muted);
+    margin-bottom: .6rem;
+  }
+  .sponsor-action-row{
+    display: flex;
+    flex-wrap: wrap;
+    gap: .5rem;
+  }
+  .sponsor-action-btn{
+    font-size: .74rem;
+    padding: .4rem .7rem;
+  }
+  .sponsor-action-done{
+    font-size: .74rem;
+    color: var(--success);
+    display: inline-flex;
+    align-items: center;
+    gap: .3rem;
+    padding: .4rem .7rem;
+  }
+  @media (max-width: 520px){
+    .info-grid{ grid-template-columns: 1fr; }
+  }
+</style>
+</head>
+<body>
+
+<div class="auth-page">
+  <div class="auth-shell">
+    <div class="glass-card">
+
+      <div class="auth-logo-row">
+        <div class="auth-logo-mark">RI</div>
+        <div class="auth-logo-text">
+          <div class="t1">Registration Intelligence</div>
+          <div class="t2">Attendee Management</div>
+        </div>
+      </div>
+
+      <div class="auth-header">
+        <h1>My Registration Status</h1>
+        <p>{{ event_info.name }}</p>
+      </div>
+
+      <!-- Flash messages (e.g. "already checked in", "must check in first",
+           sponsor interaction confirmations/errors) -->
+      {% with messages = get_flashed_messages(with_categories=true) %}
+        {% if messages %}
+          {% for category, message in messages %}
+            <div class="alert-box {% if category == 'success' %}alert-success{% else %}alert-error{% endif %}">
+              <i class="bi {% if category == 'success' %}bi-check-circle-fill{% else %}bi-exclamation-triangle-fill{% endif %}"></i>
+              <span>{{ message }}</span>
+            </div>
+          {% endfor %}
+        {% endif %}
+      {% endwith %}
+
+      <div class="info-card">
+        <div class="info-card-title">Registration Details</div>
+        <div class="info-grid">
+          <div class="info-item">
+            <div class="info-item-label"><i class="bi bi-calendar-event"></i> Event Name</div>
+            <div class="info-item-value">{{ event_info.name }}</div>
+          </div>
+          <div class="info-item">
+            <div class="info-item-label"><i class="bi bi-calendar-week"></i> Selected Session</div>
+            <div class="info-item-value">{{ attendee.session.title if attendee.session else "Not selected" }}</div>
+          </div>
+          <div class="info-item">
+            <div class="info-item-label"><i class="bi bi-geo-alt"></i> Venue</div>
+            <div class="info-item-value">{{ attendee.session.venue.name if attendee.session and attendee.session.venue else "N/A" }}</div>
+          </div>
+          <div class="info-item">
+            <div class="info-item-label"><i class="bi bi-mic"></i> Speaker</div>
+            <div class="info-item-value">{{ attendee.session.speaker.name if attendee.session and attendee.session.speaker else "N/A" }}</div>
+          </div>
+          <div class="info-item">
+            <div class="info-item-label"><i class="bi bi-flag"></i> Registration Status</div>
+            <div class="info-item-value">
+              {% if attendee.status == "Registered" %}
+                <span class="status-badge" style="background:var(--blue-soft);color:var(--blue);"><span class="dot-sm" style="background:var(--blue);"></span>Registered</span>
+              {% elif attendee.status == "Checked In" %}
+                <span class="status-badge checked-in"><span class="dot-sm"></span>Checked In</span>
+              {% else %}
+                <span class="status-badge" style="background:var(--danger-soft);color:var(--danger);"><span class="dot-sm" style="background:var(--danger);"></span>Checked Out</span>
+              {% endif %}
+            </div>
+          </div>
+          <div class="info-item">
+            <div class="info-item-label"><i class="bi bi-box-arrow-in-right"></i> Check-in Status</div>
+            <div class="info-item-value">{{ "Checked In" if attendee.check_in_time else "Not checked in yet" }}</div>
+          </div>
+          <div class="info-item">
+            <div class="info-item-label"><i class="bi bi-clock"></i> Check-in Time</div>
+            <div class="info-item-value">{{ attendee.check_in_time.strftime('%I:%M %p') if attendee.check_in_time else "—" }}</div>
+          </div>
+          <div class="info-item">
+            <div class="info-item-label"><i class="bi bi-clock-history"></i> Check-out Time</div>
+            <div class="info-item-value">{{ attendee.check_out_time.strftime('%I:%M %p') if attendee.check_out_time else "—" }}</div>
+          </div>
+        </div>
+      </div>
+
+      <!-- ============ CHECK-IN / CHECK-OUT ACTION ============ -->
+      <div class="checkin-box">
+        {% if attendee.status == "Registered" %}
+          <form action="{{ url_for('attendee_checkin', attendee_id=attendee.id) }}" method="POST">
+            <button type="submit" class="btn-register"><i class="bi bi-box-arrow-in-right"></i> Check In</button>
+          </form>
+
+        {% elif attendee.status == "Checked In" %}
+          <div class="state-label">Checked In</div>
+          <div class="state-time">Check-in time: {{ attendee.check_in_time.strftime('%I:%M %p') if attendee.check_in_time else "—" }}</div>
+          <form action="{{ url_for('attendee_checkout', attendee_id=attendee.id) }}" method="POST">
+            <button type="submit" class="btn-register"><i class="bi bi-box-arrow-right"></i> Check Out</button>
+          </form>
+
+        {% elif attendee.status == "Checked Out" %}
+          <div class="state-label">Checked Out</div>
+          <div class="state-time">Check-out time: {{ attendee.check_out_time.strftime('%I:%M %p') if attendee.check_out_time else "—" }}</div>
+        {% endif %}
+      </div>
+
+      <!-- ============ SPONSORS ============ -->
+      {% if relevant_sponsors %}
+      <div class="info-card">
+        <div class="info-card-title">Sponsors at Your Session</div>
+        {% for sponsor in relevant_sponsors %}
+          {% set logged_types = logged_types_by_sponsor.get(sponsor.id, []) %}
+          <div class="sponsor-row">
+            <div class="sponsor-name">{{ sponsor.company_name }}</div>
+            <div class="sponsor-package">{{ sponsor.package }} Sponsor</div>
+            <div class="sponsor-action-row">
+              {% for t in interaction_types %}
+                {% if t in logged_types %}
+                  <span class="sponsor-action-done"><i class="bi bi-check-circle-fill"></i> {{ t }}</span>
+                {% else %}
+                  <form method="POST" action="{{ url_for('record_sponsor_interaction', attendee_id=attendee.id, sponsor_id=sponsor.id) }}" style="display:inline;">
+                    <input type="hidden" name="interaction_type" value="{{ t }}">
+                    <button type="submit" class="btn-export sponsor-action-btn">{{ t }}</button>
+                  </form>
+                {% endif %}
+              {% endfor %}
+            </div>
+          </div>
+        {% endfor %}
+      </div>
+      {% endif %}
+
+      <div class="auth-footer-note">
+        <a href="/">&larr; Back to Home</a>
+      </div>
+
+    </div>
+  </div>
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+</body>
+</html>

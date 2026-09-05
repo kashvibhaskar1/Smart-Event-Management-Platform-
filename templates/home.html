@@ -1,0 +1,261 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Registration Intelligence &amp; Attendee Management</title>
+
+<!-- Google Fonts -->
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600;700&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+
+<!-- Bootstrap 5 -->
+<link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
+<!-- Bootstrap Icons -->
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.css">
+
+<!-- Custom Stylesheet (shared with dashboard) -->
+<link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+
+<!-- Landing-page-only styles (scoped here so style.css stays untouched) -->
+<style>
+  body{ overflow-x: hidden; }
+
+  .home-nav{
+    position: sticky;
+    top: 0;
+    z-index: 50;
+    background: rgba(255,255,255,0.9);
+    backdrop-filter: blur(8px);
+    border-bottom: 1px solid var(--border);
+  }
+  .home-nav-inner{
+    max-width: 1180px;
+    margin: 0 auto;
+    padding: 1rem 1.75rem;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 1rem;
+  }
+  .home-brand{ display: flex; align-items: center; gap: .7rem; }
+  .home-nav-actions{ display: flex; align-items: center; gap: .6rem; }
+
+  .hero-section{
+    background:
+      radial-gradient(900px 480px at 85% -10%, rgba(37,99,235,0.12), transparent 60%),
+      radial-gradient(700px 420px at 5% 20%, rgba(124,58,237,0.08), transparent 55%),
+      linear-gradient(180deg, #F4F7FD 0%, #EEF3FC 100%);
+    padding: 5.5rem 1.5rem 4.5rem;
+  }
+  .hero-inner{
+    max-width: 780px;
+    margin: 0 auto;
+    text-align: center;
+  }
+  .hero-title{
+    font-family: var(--font-display);
+    font-weight: 600;
+    font-size: 2.6rem;
+    line-height: 1.2;
+    color: var(--text-primary);
+    letter-spacing: -0.5px;
+    margin-bottom: 1.1rem;
+  }
+  .hero-subtitle{
+    font-size: 1.02rem;
+    color: var(--text-secondary);
+    line-height: 1.65;
+    max-width: 620px;
+    margin: 0 auto 2rem;
+  }
+  .hero-actions{
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: .8rem;
+    flex-wrap: wrap;
+    margin-bottom: 3rem;
+  }
+  .btn-hero{
+    padding: .8rem 1.5rem;
+    font-size: .9rem;
+    border-radius: 12px;
+  }
+
+  .features-section{ padding: 3rem 1.5rem 4.5rem; background: var(--surface); }
+  .features-inner{ max-width: 1180px; margin: 0 auto; }
+
+  .feature-card{
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: var(--radius-lg);
+    box-shadow: var(--shadow-sm);
+    padding: 1.6rem 1.4rem;
+    height: 100%;
+    transition: transform .2s ease, box-shadow .2s ease;
+  }
+  .feature-card:hover{
+    transform: translateY(-4px);
+    box-shadow: var(--shadow-hover);
+  }
+  .feature-icon{
+    width: 46px; height: 46px;
+    border-radius: 12px;
+    display: flex; align-items: center; justify-content: center;
+    font-size: 1.2rem;
+    margin-bottom: 1.1rem;
+  }
+  .feature-icon.blue{ background: var(--blue-soft); color: var(--blue); }
+  .feature-icon.success{ background: var(--success-soft); color: var(--success); }
+  .feature-icon.purple{ background: var(--purple-soft); color: var(--purple); }
+  .feature-icon.slate{ background: var(--slate-soft); color: var(--slate); }
+  .feature-card h3{
+    font-family: var(--font-display);
+    font-size: 1.02rem;
+    font-weight: 600;
+    color: var(--text-primary);
+    margin-bottom: .5rem;
+  }
+  .feature-card p{
+    font-size: .84rem;
+    color: var(--text-secondary);
+    line-height: 1.55;
+    margin: 0;
+  }
+
+  .home-footer{ background: var(--text-primary); padding: 2.6rem 1.5rem 1.8rem; }
+  .home-footer-inner{
+    max-width: 1180px;
+    margin: 0 auto;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 1.5rem;
+    flex-wrap: wrap;
+    padding-bottom: 1.6rem;
+    border-bottom: 1px solid rgba(255,255,255,0.1);
+  }
+  .footer-brand{ display: flex; align-items: center; gap: .7rem; }
+  .home-footer .brand-title{ color: #fff; }
+  .home-footer .brand-sub{ color: rgba(255,255,255,0.55); }
+  .footer-links{ display: flex; gap: 1.3rem; flex-wrap: wrap; }
+  .footer-links a{
+    font-size: .82rem;
+    color: rgba(255,255,255,0.7);
+    transition: color .15s ease;
+  }
+  .footer-links a:hover{ color: #fff; }
+  .footer-meta{
+    max-width: 1180px;
+    margin: 1.4rem auto 0;
+    font-size: .76rem;
+    color: rgba(255,255,255,0.45);
+    text-align: center;
+  }
+
+  @media (max-width: 767.98px){
+    .hero-title{ font-size: 2rem; }
+  }
+</style>
+</head>
+<body>
+
+<!-- ============ TOP NAV ============ -->
+<header class="home-nav">
+  <div class="home-nav-inner">
+    <div class="home-brand">
+      <div class="brand-mark">RI</div>
+      <div class="brand-text">
+        <div class="brand-title">Registration Intelligence</div>
+        <div class="brand-sub">Attendee Management</div>
+      </div>
+    </div>
+    <div class="home-nav-actions">
+      <a href="/dashboard" class="btn-export d-none d-sm-inline-flex">Dashboard</a>
+      <a href="/register" class="btn-primary-solid">Register</a>
+    </div>
+  </div>
+</header>
+
+<!-- ============ HERO ============ -->
+<section class="hero-section">
+  <div class="hero-inner">
+    <h1 class="hero-title">Registration Intelligence &amp; Attendee Management</h1>
+    <p class="hero-subtitle">
+      A smart event registration and attendee management system for seamless registrations,
+      duplicate prevention, check-in/check-out tracking and attendee analytics.
+    </p>
+    <div class="hero-actions">
+      <a href="/dashboard" class="btn-primary-solid btn-hero"><i class="bi bi-speedometer2"></i> Go to Dashboard</a>
+      <a href="/register" class="btn-export btn-hero"><i class="bi bi-person-plus"></i> Register</a>
+    </div>
+  </div>
+</section>
+
+<!-- ============ FEATURES ============ -->
+<section class="features-section">
+  <div class="features-inner">
+    <div class="row g-3">
+      <div class="col-md-6 col-lg-3">
+        <div class="feature-card">
+          <div class="feature-icon blue"><i class="bi bi-ui-checks-grid"></i></div>
+          <h3>Smart Registration</h3>
+          <p>Collect attendee details securely.</p>
+        </div>
+      </div>
+      <div class="col-md-6 col-lg-3">
+        <div class="feature-card">
+          <div class="feature-icon success"><i class="bi bi-fingerprint"></i></div>
+          <h3>Duplicate Detection</h3>
+          <p>Prevent duplicate registrations using email and phone validation.</p>
+        </div>
+      </div>
+      <div class="col-md-6 col-lg-3">
+        <div class="feature-card">
+          <div class="feature-icon purple"><i class="bi bi-qr-code-scan"></i></div>
+          <h3>Check-In / Check-Out</h3>
+          <p>Track attendee presence during the event.</p>
+        </div>
+      </div>
+      <div class="col-md-6 col-lg-3">
+        <div class="feature-card">
+          <div class="feature-icon slate"><i class="bi bi-graph-up-arrow"></i></div>
+          <h3>Analytics Dashboard</h3>
+          <p>View registration statistics and attendee insights.</p>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ============ FOOTER ============ -->
+<footer class="home-footer">
+  <div class="home-footer-inner">
+    <div class="footer-brand">
+      <div class="brand-mark">RI</div>
+      <div class="brand-text">
+        <div class="brand-title">Registration Intelligence</div>
+        <div class="brand-sub">Attendee Management</div>
+      </div>
+    </div>
+
+    <div class="footer-links">
+      <a href="/dashboard">Dashboard</a>
+      <a href="/register">Registrations</a>
+      <a href="/attendees">Attendees</a>
+      <a href="/analytics">Analytics</a>
+      <a href="/ai_insights">AI Insights</a>
+      <a href="/settings">Settings</a>
+    </div>
+
+    <div class="footer-meta">
+      <span>&copy; 2026 Registration Intelligence. All rights reserved.</span>
+    </div>
+  </div>
+</footer>
+
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+</body>
+</html>

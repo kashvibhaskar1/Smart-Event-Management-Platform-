@@ -1,0 +1,259 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Attendees | Registration Command Center</title>
+
+<!-- Google Fonts -->
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600;700&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+
+<!-- Bootstrap 5 -->
+<link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
+<!-- Bootstrap Icons -->
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.css">
+
+<!-- Custom Stylesheet -->
+<link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+</head>
+<body>
+
+<!-- ============ SIDEBAR OVERLAY (mobile) ============ -->
+<div class="sidebar-overlay" id="sidebarOverlay"></div>
+
+<!-- ============ SIDEBAR ============ -->
+<aside class="sidebar" id="sidebar">
+  <div class="sidebar-brand">
+    <div class="brand-mark">RI</div>
+    <div class="brand-text">
+      <div class="brand-title">Registration Intelligence</div>
+      <div class="brand-sub">Attendee Management</div>
+    </div>
+  </div>
+  <div class="sidebar-divider"></div>
+
+  <nav class="sidebar-nav">
+    <div class="sidebar-label">Main</div>
+    <a href="/dashboard" class="nav-item-link"><i class="bi bi-speedometer2"></i> Dashboard</a>
+    <a href="/register" class="nav-item-link"><i class="bi bi-person-plus"></i> Registrations</a>
+    <a href="/attendees" class="nav-item-link active"><i class="bi bi-people"></i> Attendees</a>
+    <a href="/venues" class="nav-item-link"><i class="bi bi-building"></i> Venues</a>
+    <a href="/speakers" class="nav-item-link"><i class="bi bi-mic"></i> Speakers</a>
+    <a href="/sessions" class="nav-item-link"><i class="bi bi-calendar3"></i> Sessions</a>
+    <a href="/sponsors" class="nav-item-link"><i class="bi bi-briefcase"></i> Sponsors <span class="badge-mini">New</span></a>
+    <a href="/analytics" class="nav-item-link"><i class="bi bi-graph-up-arrow"></i> Analytics</a>
+
+    <div class="sidebar-label mt-3">Intelligence</div>
+    <a href="/intelligence" class="nav-item-link"><i class="bi bi-cpu"></i> Intelligence Engine <span class="badge-mini">New</span></a>
+    <a href="/ai_insights" class="nav-item-link"><i class="bi bi-stars"></i> AI Insights <span class="badge-mini">New</span></a>
+    <a href="/email_logs" class="nav-item-link"><i class="bi bi-envelope-check"></i> Email Logs</a>
+
+    <div class="sidebar-label mt-3">System</div>
+    <a href="/settings" class="nav-item-link"><i class="bi bi-gear"></i> Settings</a>
+  </nav>
+
+  <div class="sidebar-footer">
+    <div class="upgrade-card">
+      <i class="bi bi-shield-check me-1"></i> All systems operational
+    </div>
+  </div>
+</aside>
+
+<!-- ============ TOPBAR ============ -->
+<header class="topbar">
+  <button class="sidebar-toggle-btn" id="sidebarToggle" aria-label="Toggle sidebar">
+    <i class="bi bi-list fs-5"></i>
+  </button>
+
+  <div class="search-wrap">
+    <i class="bi bi-search"></i>
+    <input type="text" class="search-input" placeholder="Search attendees, emails, IDs…">
+    <span class="search-kbd">⌘K</span>
+  </div>
+
+  <div class="topbar-right">
+    <button class="icon-btn" aria-label="Notifications">
+      <i class="bi bi-bell"></i>
+      <span class="ping-dot"></span>
+    </button>
+    <button class="icon-btn" aria-label="Help">
+      <i class="bi bi-question-circle"></i>
+    </button>
+
+    <div class="dropdown">
+      <div class="admin-profile" data-bs-toggle="dropdown" aria-expanded="false">
+        <div class="admin-avatar">AD</div>
+        <div class="admin-name">
+          <div class="name">Admin User</div>
+          <div class="role">Super Admin</div>
+        </div>
+        <i class="bi bi-chevron-down text-secondary" style="font-size:.7rem;"></i>
+      </div>
+      <ul class="dropdown-menu dropdown-menu-end mt-2">
+        <li><a class="dropdown-item" href="#"><i class="bi bi-person me-2"></i>Profile</a></li>
+        <li><a class="dropdown-item" href="/settings"><i class="bi bi-gear me-2"></i>Settings</a></li>
+        <li><hr class="dropdown-divider"></li>
+        <li><a class="dropdown-item" href="/logout"><i class="bi bi-box-arrow-right me-2"></i>Sign out</a></li>
+      </ul>
+    </div>
+  </div>
+</header>
+
+<!-- ============ MAIN CONTENT ============ -->
+<main class="main-content">
+
+  <div class="page-heading">
+    <div>
+      <div class="eyebrow">Attendee Directory</div>
+      <h1>Attendees</h1>
+      <p>Search, filter, and manage check-in status for every registered attendee.</p>
+    </div>
+    <div class="d-flex gap-2">
+      <span class="attendees-count-tag"><i class="bi bi-people-fill me-1"></i>{{ attendees|length }} total</span>
+      <a href="/register" class="btn-primary-solid"><i class="bi bi-plus-lg"></i> New registration</a>
+    </div>
+  </div>
+
+  <!-- ============ ATTENDEES TABLE ============ -->
+  <div class="table-panel mb-4">
+    <div class="panel-header">
+      <div>
+        <h2>All Attendees</h2>
+        <div class="panel-sub">Every registration recorded in the system</div>
+      </div>
+    </div>
+
+    <div class="table-toolbar">
+      <div class="table-search">
+        <i class="bi bi-search"></i>
+        <input type="text" id="attendeeSearch" placeholder="Search by name or email…">
+      </div>
+      <select class="table-filter" id="statusFilter">
+        <option value="all">All</option>
+        <option value="registered">Registered</option>
+        <option value="checked-in">Checked In</option>
+        <option value="checked-out">Checked Out</option>
+      </select>
+    </div>
+
+    <div class="table-responsive">
+      <table class="reg-table" id="attendeeTable">
+        <thead>
+          <tr>
+            <th>Name</th>
+            <th>Email</th>
+            <th>Phone</th>
+            <th>City</th>
+            <th>Area of Interest</th>
+            <th>Selected Session</th>
+            <th>Check-in Time</th>
+            <th>Check-out Time</th>
+            <th>Status</th>
+            <th class="text-end">Actions</th>
+          </tr>
+        </thead>
+        <tbody>
+          {% for attendee in attendees %}
+          <tr
+            {% if attendee.status == 'Registered' %}data-status="registered"
+            {% elif attendee.status == 'Checked In' %}data-status="checked-in"
+            {% elif attendee.status == 'Checked Out' %}data-status="checked-out"
+            {% endif %}
+            data-name="{{ attendee.fullname|lower }}" data-email="{{ attendee.email|lower }}">
+            <td>
+              <div class="attendee-name">
+                <div class="name-avatar">{{ attendee.fullname[0]|upper }}</div>
+                <div>
+                  <div class="full-name">{{ attendee.fullname }}</div>
+                  <div class="attendee-id">ID #{{ attendee.id }}</div>
+                </div>
+              </div>
+            </td>
+            <td>{{ attendee.email }}</td>
+            <td>{{ attendee.phone }}</td>
+            <td>{{ attendee.city }}</td>
+            <td>{{ attendee.interest }}</td>
+            <td>{{ attendee.session.title if attendee.session else "—" }}</td>
+            <td>{{ attendee.check_in_time.strftime('%d %b %Y, %I:%M %p') if attendee.check_in_time else "—" }}</td>
+            <td>{{ attendee.check_out_time.strftime('%d %b %Y, %I:%M %p') if attendee.check_out_time else "—" }}</td>
+            <td>
+              {% if attendee.status == 'Registered' %}
+                <span class="status-badge registered"><span class="dot-sm"></span>Registered</span>
+              {% elif attendee.status == 'Checked In' %}
+                <span class="status-badge checked-in"><span class="dot-sm"></span>Checked In</span>
+              {% elif attendee.status == 'Checked Out' %}
+                <span class="status-badge" style="background:var(--danger-soft);color:var(--danger);"><span class="dot-sm" style="background:var(--danger);"></span>Checked Out</span>
+              {% endif %}
+            </td>
+            <td class="text-end">
+              {% if attendee.status == 'Registered' %}
+                <a href="/checkin/{{ attendee.id }}" class="btn-action-pill btn-checkin">
+                  <i class="bi bi-box-arrow-in-right"></i> Check In
+                </a>
+              {% elif attendee.status == 'Checked In' %}
+                <a href="/checkout/{{ attendee.id }}" class="btn-action-pill btn-checkout">
+                  <i class="bi bi-box-arrow-right"></i> Check Out
+                </a>
+              {% elif attendee.status == 'Checked Out' %}
+                <span class="badge-completed">
+                  <i class="bi bi-check2-circle"></i> Completed
+                </span>
+              {% endif %}
+            </td>
+          </tr>
+          {% else %}
+          <tr>
+            <td colspan="10">
+              <div class="empty-state">
+                <i class="bi bi-inbox"></i>
+                No attendees found. New registrations will appear here.
+              </div>
+            </td>
+          </tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    </div>
+  </div>
+
+</main>
+
+<!-- Bootstrap JS -->
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+
+<script>
+  // ---- Sidebar toggle (mobile) ----
+  const sidebar = document.getElementById('sidebar');
+  const overlay = document.getElementById('sidebarOverlay');
+  const toggleBtn = document.getElementById('sidebarToggle');
+
+  function toggleSidebar(){
+    sidebar.classList.toggle('show');
+    overlay.classList.toggle('show');
+  }
+  toggleBtn?.addEventListener('click', toggleSidebar);
+  overlay?.addEventListener('click', toggleSidebar);
+
+  // ---- Attendee table search + filter ----
+  const searchInput = document.getElementById('attendeeSearch');
+  const statusFilter = document.getElementById('statusFilter');
+  const tableRows = document.querySelectorAll('#attendeeTable tbody tr[data-status]');
+
+  function applyTableFilters(){
+    const query = (searchInput?.value || '').toLowerCase().trim();
+    const status = statusFilter?.value || 'all';
+
+    tableRows.forEach(row => {
+      const matchesQuery = !query || row.dataset.name.includes(query) || row.dataset.email.includes(query);
+      const matchesStatus = status === 'all' || row.dataset.status === status;
+      row.style.display = (matchesQuery && matchesStatus) ? '' : 'none';
+    });
+  }
+  searchInput?.addEventListener('input', applyTableFilters);
+  statusFilter?.addEventListener('change', applyTableFilters);
+</script>
+
+</body>
+</html>

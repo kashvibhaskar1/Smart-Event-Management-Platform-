@@ -1,0 +1,517 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>{{ sponsor.company_name }} | Sponsors | Registration Command Center</title>
+
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600;700&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+
+<link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.css">
+<link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+</head>
+<body>
+
+<div class="sidebar-overlay" id="sidebarOverlay"></div>
+
+<aside class="sidebar" id="sidebar">
+  <div class="sidebar-brand">
+    <div class="brand-mark">RI</div>
+    <div class="brand-text">
+      <div class="brand-title">Registration Intelligence</div>
+      <div class="brand-sub">Attendee Management</div>
+    </div>
+  </div>
+  <div class="sidebar-divider"></div>
+
+  <nav class="sidebar-nav">
+    <div class="sidebar-label">Main</div>
+    <a href="/dashboard" class="nav-item-link"><i class="bi bi-speedometer2"></i> Dashboard</a>
+    <a href="/register" class="nav-item-link"><i class="bi bi-person-plus"></i> Registrations</a>
+    <a href="/attendees" class="nav-item-link"><i class="bi bi-people"></i> Attendees</a>
+    <a href="/venues" class="nav-item-link"><i class="bi bi-building"></i> Venues</a>
+    <a href="/speakers" class="nav-item-link"><i class="bi bi-mic"></i> Speakers</a>
+    <a href="/sessions" class="nav-item-link"><i class="bi bi-calendar3"></i> Sessions</a>
+    <a href="/sponsors" class="nav-item-link active"><i class="bi bi-briefcase"></i> Sponsors <span class="badge-mini">New</span></a>
+    <a href="/incidents" class="nav-item-link"><i class="bi bi-exclamation-triangle"></i> Incidents <span class="badge-mini">New</span></a>
+    <a href="/analytics" class="nav-item-link"><i class="bi bi-graph-up-arrow"></i> Analytics</a>
+
+    <div class="sidebar-label mt-3">Intelligence</div>
+    <a href="/ai_insights" class="nav-item-link"><i class="bi bi-stars"></i> AI Insights <span class="badge-mini">New</span></a>
+    <a href="/email_logs" class="nav-item-link"><i class="bi bi-envelope-check"></i> Email Logs</a>
+
+    <div class="sidebar-label mt-3">System</div>
+    <a href="/settings" class="nav-item-link"><i class="bi bi-gear"></i> Settings</a>
+  </nav>
+
+  <div class="sidebar-footer">
+    <div class="upgrade-card">
+      <i class="bi bi-shield-check me-1"></i> All systems operational
+    </div>
+  </div>
+</aside>
+
+<header class="topbar">
+  <button class="sidebar-toggle-btn" id="sidebarToggle" aria-label="Toggle sidebar">
+    <i class="bi bi-list fs-5"></i>
+  </button>
+
+  <div class="search-wrap">
+    <i class="bi bi-search"></i>
+    <input type="text" class="search-input" placeholder="Search attendees, emails, IDs…">
+    <span class="search-kbd">⌘K</span>
+  </div>
+
+  <div class="topbar-right">
+    <button class="icon-btn" aria-label="Notifications">
+      <i class="bi bi-bell"></i>
+      <span class="ping-dot"></span>
+    </button>
+    <button class="icon-btn" aria-label="Help">
+      <i class="bi bi-question-circle"></i>
+    </button>
+
+    <div class="dropdown">
+      <div class="admin-profile" data-bs-toggle="dropdown" aria-expanded="false">
+        <div class="admin-avatar">AD</div>
+        <div class="admin-name">
+          <div class="name">Admin User</div>
+          <div class="role">Super Admin</div>
+        </div>
+        <i class="bi bi-chevron-down text-secondary" style="font-size:.7rem;"></i>
+      </div>
+      <ul class="dropdown-menu dropdown-menu-end mt-2">
+        <li><a class="dropdown-item" href="#"><i class="bi bi-person me-2"></i>Profile</a></li>
+        <li><a class="dropdown-item" href="/settings"><i class="bi bi-gear me-2"></i>Settings</a></li>
+        <li><hr class="dropdown-divider"></li>
+        <li><a class="dropdown-item" href="/logout"><i class="bi bi-box-arrow-right me-2"></i>Sign out</a></li>
+      </ul>
+    </div>
+  </div>
+</header>
+
+<main class="main-content">
+
+  <div class="page-heading">
+    <div>
+      <div class="eyebrow">
+        <a href="/sponsors" style="color:var(--muted);text-decoration:none;">Sponsors</a>
+        <span style="color:var(--muted);"> / </span>
+        {{ sponsor.company_name }}
+      </div>
+      <h1>{{ sponsor.company_name }}</h1>
+      <p>Sponsorship details and deliverable tracking.</p>
+    </div>
+    <div>
+      <a href="/sponsors" class="btn-export"><i class="bi bi-arrow-left"></i> Back to Sponsors</a>
+    </div>
+  </div>
+
+  {% with messages = get_flashed_messages(with_categories=true) %}
+    {% if messages %}
+      {% for category, message in messages %}
+        <div class="alert-box {% if category == 'success' %}alert-success{% else %}alert-error{% endif %}" style="margin-bottom:1rem;">
+          <i class="bi {% if category == 'success' %}bi-check-circle-fill{% else %}bi-exclamation-triangle-fill{% endif %}"></i>
+          <span>{{ message }}</span>
+        </div>
+      {% endfor %}
+    {% endif %}
+  {% endwith %}
+
+  <!-- ============ SPONSOR INFO CARD ============ -->
+  <div class="table-panel mb-4">
+    <div class="panel-header">
+      <div>
+        <h2>Sponsor Details</h2>
+        <div class="panel-sub">ID #{{ sponsor.id }}</div>
+      </div>
+      <div>
+        {% if sponsor.package == "Platinum" %}
+          <span class="status-badge" style="background:var(--slate-soft);color:var(--slate);"><span class="dot-sm" style="background:var(--slate);"></span>Platinum</span>
+        {% elif sponsor.package == "Gold" %}
+          <span class="status-badge" style="background:var(--blue-soft);color:var(--blue);"><span class="dot-sm" style="background:var(--blue);"></span>Gold</span>
+        {% elif sponsor.package == "Silver" %}
+          <span class="status-badge" style="background:var(--purple-soft);color:var(--purple);"><span class="dot-sm" style="background:var(--purple);"></span>Silver</span>
+        {% else %}
+          <span class="status-badge" style="background:var(--success-soft);color:var(--success);"><span class="dot-sm" style="background:var(--success);"></span>Custom</span>
+        {% endif %}
+        &nbsp;
+        {% if sponsor.overall_status == "Active" %}
+          <span class="status-badge registered"><span class="dot-sm"></span>Active</span>
+        {% elif sponsor.overall_status == "Confirmed" %}
+          <span class="status-badge checked-in"><span class="dot-sm"></span>Confirmed</span>
+        {% elif sponsor.overall_status == "Completed" %}
+          <span class="status-badge" style="background:var(--slate-soft);color:var(--slate);"><span class="dot-sm" style="background:var(--slate);"></span>Completed</span>
+        {% else %}
+          <span class="status-badge" style="background:var(--danger-soft);color:var(--danger);"><span class="dot-sm" style="background:var(--danger);"></span>Cancelled</span>
+        {% endif %}
+      </div>
+    </div>
+    <div style="padding: 1.25rem 1.5rem;">
+      <div class="row g-3">
+        <div class="col-sm-6 col-md-3">
+          <div style="font-size:.75rem;color:var(--muted);font-weight:600;text-transform:uppercase;letter-spacing:.05em;margin-bottom:.25rem;">Contact Person</div>
+          <div style="font-weight:600;">{{ sponsor.contact_person }}</div>
+        </div>
+        <div class="col-sm-6 col-md-3">
+          <div style="font-size:.75rem;color:var(--muted);font-weight:600;text-transform:uppercase;letter-spacing:.05em;margin-bottom:.25rem;">Email</div>
+          <div>{{ sponsor.email }}</div>
+        </div>
+        <div class="col-sm-6 col-md-3">
+          <div style="font-size:.75rem;color:var(--muted);font-weight:600;text-transform:uppercase;letter-spacing:.05em;margin-bottom:.25rem;">Phone</div>
+          <div>{{ sponsor.phone or "—" }}</div>
+        </div>
+        <div class="col-sm-6 col-md-3">
+          <div style="font-size:.75rem;color:var(--muted);font-weight:600;text-transform:uppercase;letter-spacing:.05em;margin-bottom:.25rem;">Event</div>
+          <div>
+            {% if sponsor.event %}
+              <i class="bi bi-calendar2-event me-1" style="color:var(--blue);font-size:.85rem;"></i>
+              <span style="font-weight:600;">{{ sponsor.event.name }}</span>
+              {% if sponsor.event.date_display %}
+                <div style="font-size:.75rem;color:var(--text-muted);">{{ sponsor.event.date_display }}</div>
+              {% endif %}
+            {% else %}
+              <span style="color:var(--text-muted);">—</span>
+            {% endif %}
+          </div>
+        </div>
+        <div class="col-sm-6 col-md-3">
+          <div style="font-size:.75rem;color:var(--muted);font-weight:600;text-transform:uppercase;letter-spacing:.05em;margin-bottom:.25rem;">Session</div>
+          <div>
+            {% if sponsor.sponsored_session %}
+              <i class="bi bi-calendar3 me-1" style="color:var(--purple);font-size:.85rem;"></i>
+              <span style="font-weight:600;">{{ sponsor.sponsored_session.title }}</span>
+              <div style="font-size:.75rem;color:var(--text-muted);">{{ sponsor.sponsored_session.date }}</div>
+            {% else %}
+              <span style="color:var(--text-muted);">— (linked to whole event)</span>
+            {% endif %}
+          </div>
+        </div>
+        <div class="col-sm-6 col-md-3">
+          <div style="font-size:.75rem;color:var(--muted);font-weight:600;text-transform:uppercase;letter-spacing:.05em;margin-bottom:.25rem;">Registered Attendees</div>
+          <div style="font-weight:700;font-size:1.05rem;">
+            {% if sponsor.registered_attendee_count is not none %}
+              {{ sponsor.registered_attendee_count }}
+            {% else %}
+              <span style="color:var(--text-muted);font-weight:400;font-size:.85rem;">No event linked</span>
+            {% endif %}
+          </div>
+        </div>
+        <div class="col-sm-6 col-md-3">
+          <div style="font-size:.75rem;color:var(--muted);font-weight:600;text-transform:uppercase;letter-spacing:.05em;margin-bottom:.25rem;">Checked In</div>
+          <div style="font-weight:700;font-size:1.05rem;color:var(--success);">
+            {% if sponsor.checked_in_attendee_count is not none %}
+              {{ sponsor.checked_in_attendee_count }}
+            {% else %}
+              <span style="color:var(--text-muted);font-weight:400;font-size:.85rem;">—</span>
+            {% endif %}
+          </div>
+        </div>
+        <div class="col-sm-6 col-md-3">
+          <div style="font-size:.75rem;color:var(--muted);font-weight:600;text-transform:uppercase;letter-spacing:.05em;margin-bottom:.25rem;">Contract Status</div>
+          <div>
+            {% if sponsor.contract_status == "Signed" %}
+              <span class="status-badge checked-in"><span class="dot-sm"></span>Signed</span>
+            {% elif sponsor.contract_status == "Cancelled" %}
+              <span class="status-badge" style="background:var(--danger-soft);color:var(--danger);"><span class="dot-sm" style="background:var(--danger);"></span>Cancelled</span>
+            {% else %}
+              <span class="status-badge" style="background:var(--slate-soft);color:var(--slate);"><span class="dot-sm" style="background:var(--slate);"></span>Pending</span>
+            {% endif %}
+          </div>
+        </div>
+        <div class="col-sm-4 col-md-3">
+          <div style="font-size:.75rem;color:var(--muted);font-weight:600;text-transform:uppercase;letter-spacing:.05em;margin-bottom:.25rem;">Total Amount</div>
+          <div style="font-weight:700;font-size:1.05rem;">₹{{ "{:,.0f}".format(sponsor.total_amount) }}</div>
+        </div>
+        <div class="col-sm-4 col-md-3">
+          <div style="font-size:.75rem;color:var(--muted);font-weight:600;text-transform:uppercase;letter-spacing:.05em;margin-bottom:.25rem;">Amount Paid</div>
+          <div style="font-weight:700;font-size:1.05rem;color:var(--success);">₹{{ "{:,.0f}".format(sponsor.amount_paid) }}</div>
+        </div>
+        <div class="col-sm-4 col-md-3">
+          <div style="font-size:.75rem;color:var(--muted);font-weight:600;text-transform:uppercase;letter-spacing:.05em;margin-bottom:.25rem;">Pending Amount</div>
+          <div style="font-weight:700;font-size:1.05rem;{% if sponsor.pending_amount > 0 %}color:var(--danger);{% else %}color:var(--success);{% endif %}">
+            ₹{{ "{:,.0f}".format(sponsor.pending_amount) }}
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ============ DELIVERABLES PANEL ============ -->
+  <div class="table-panel mb-4">
+    <div class="panel-header">
+      <div>
+        <h2>Deliverables / Commitments</h2>
+        <div class="panel-sub">
+          {% if total_deliverables == 0 %}
+            No deliverables added yet.
+          {% elif completed_deliverables == total_deliverables %}
+            <span style="color:var(--success);font-weight:600;">
+              <i class="bi bi-check-circle-fill"></i>
+              {{ completed_deliverables }} of {{ total_deliverables }} deliverables completed
+            </span>
+          {% else %}
+            {{ completed_deliverables }} of {{ total_deliverables }} deliverables completed
+          {% endif %}
+        </div>
+      </div>
+      <div>
+        <button type="button" class="btn-primary-solid" data-bs-toggle="modal" data-bs-target="#addDeliverableModal">
+          <i class="bi bi-plus-lg"></i> Add Deliverable
+        </button>
+      </div>
+    </div>
+
+    {% if total_deliverables > 0 %}
+    <!-- Completion progress bar -->
+    <div style="padding: 0 1.5rem .5rem;">
+      <div style="height:6px;background:var(--border);border-radius:99px;overflow:hidden;">
+        <div style="height:100%;width:{{ ((completed_deliverables / total_deliverables) * 100)|round|int }}%;background:var(--success);border-radius:99px;transition:width .4s;"></div>
+      </div>
+    </div>
+    {% endif %}
+
+    <div class="table-responsive">
+      <table class="reg-table">
+        <thead>
+          <tr>
+            <th>Deliverable</th>
+            <th>Description</th>
+            <th>Due Date</th>
+            <th>Status</th>
+            <th class="text-end">Actions</th>
+          </tr>
+        </thead>
+        <tbody>
+          {% for d in deliverables %}
+          <tr>
+            <td>
+              <div style="font-weight:600;">{{ d.name }}</div>
+            </td>
+            <td style="max-width:280px;">
+              <div style="color:var(--muted);font-size:.875rem;white-space:normal;">{{ d.description or "—" }}</div>
+            </td>
+            <td>
+              {% if d.due_date %}
+                {{ d.due_date.strftime('%d %b %Y') }}
+              {% else %}
+                —
+              {% endif %}
+            </td>
+            <td>
+              {% if d.status == "Completed" %}
+                <span class="status-badge checked-in"><span class="dot-sm"></span>Completed</span>
+              {% elif d.status == "In Progress" %}
+                <span class="status-badge" style="background:var(--blue-soft);color:var(--blue);"><span class="dot-sm" style="background:var(--blue);"></span>In Progress</span>
+              {% else %}
+                <span class="status-badge" style="background:var(--slate-soft);color:var(--slate);"><span class="dot-sm" style="background:var(--slate);"></span>Pending</span>
+              {% endif %}
+            </td>
+            <td class="text-end">
+              <div class="row-actions justify-content-end">
+                {% if d.status != "Completed" %}
+                <form method="POST" action="/sponsors/{{ sponsor.id }}/deliverables/{{ d.id }}/complete" style="display:inline;">
+                  <button type="submit" class="action-btn" title="Mark as completed" aria-label="Mark as completed" style="color:var(--success);">
+                    <i class="bi bi-check2-circle"></i>
+                  </button>
+                </form>
+                {% endif %}
+                <button type="button" class="action-btn" data-bs-toggle="modal" data-bs-target="#editDeliverableModal"
+                        data-del-id="{{ d.id }}"
+                        data-del-name="{{ d.name }}"
+                        data-del-description="{{ d.description or '' }}"
+                        data-del-due-date="{{ d.due_date.strftime('%Y-%m-%d') if d.due_date else '' }}"
+                        data-del-status="{{ d.status }}"
+                        title="Edit deliverable" aria-label="Edit deliverable">
+                  <i class="bi bi-pencil"></i>
+                </button>
+                <form method="POST" action="/sponsors/{{ sponsor.id }}/deliverables/{{ d.id }}/delete"
+                      onsubmit="return confirm('Delete deliverable \'{{ d.name }}\'? This cannot be undone.');"
+                      style="display:inline;">
+                  <button type="submit" class="action-btn" title="Delete deliverable" aria-label="Delete deliverable">
+                    <i class="bi bi-trash"></i>
+                  </button>
+                </form>
+              </div>
+            </td>
+          </tr>
+          {% else %}
+          <tr>
+            <td colspan="5">
+              <div class="empty-state">
+                <i class="bi bi-clipboard-check"></i>
+                No deliverables added yet. Click "Add Deliverable" to get started.
+              </div>
+            </td>
+          </tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    </div>
+  </div>
+
+  <!-- ============ SPONSOR INTERACTIONS ============ -->
+  <div class="table-panel mb-4">
+    <div class="panel-header">
+      <div>
+        <h2>Interaction History</h2>
+        <div class="panel-sub">Booth visits, leads and attendee interactions — recorded by attendees themselves, read-only here</div>
+      </div>
+    </div>
+
+    <div class="table-responsive">
+      <table class="reg-table">
+        <thead>
+          <tr>
+            <th>Type</th>
+            <th>Attendee</th>
+            <th>Session</th>
+            <th>Timestamp</th>
+          </tr>
+        </thead>
+        <tbody>
+          {% for i in interactions %}
+          <tr>
+            <td>
+              {% if i.interaction_type == "Lead Generated" %}
+                <span class="status-badge checked-in"><span class="dot-sm"></span>Lead Generated</span>
+              {% elif i.interaction_type == "Booth Visit" %}
+                <span class="status-badge" style="background:var(--blue-soft);color:var(--blue);"><span class="dot-sm" style="background:var(--blue);"></span>Booth Visit</span>
+              {% else %}
+                <span class="status-badge" style="background:var(--purple-soft);color:var(--purple);"><span class="dot-sm" style="background:var(--purple);"></span>Attendee Interaction</span>
+              {% endif %}
+            </td>
+            <td>{{ i.attendee.fullname if i.attendee else "—" }}</td>
+            <td>{{ i.session.title if i.session else "—" }}</td>
+            <td>{{ i.timestamp.strftime('%d %b %Y, %I:%M %p') if i.timestamp else "—" }}</td>
+          </tr>
+          {% else %}
+          <tr>
+            <td colspan="4">
+              <div class="empty-state">
+                <i class="bi bi-clock-history"></i>
+                No interaction data yet.
+              </div>
+            </td>
+          </tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    </div>
+  </div>
+
+</main>
+
+<!-- Add Deliverable Modal -->
+<div class="modal fade" id="addDeliverableModal" tabindex="-1" aria-hidden="true">
+  <div class="modal-dialog">
+    <div class="modal-content" style="border-radius: var(--radius-lg); border: 1px solid var(--border);">
+      <form method="POST" action="/sponsors/{{ sponsor.id }}/deliverables/add">
+        <div class="modal-header">
+          <h5 class="modal-title">Add Deliverable</h5>
+          <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+        </div>
+        <div class="modal-body">
+          <div class="form-group full mb-3">
+            <label class="form-label" for="a_del_name">Deliverable Name <span class="req">*</span></label>
+            <input type="text" class="form-input" id="a_del_name" name="name" placeholder="e.g. Logo on Main Stage Banner" required>
+          </div>
+          <div class="form-group full mb-3">
+            <label class="form-label" for="a_del_desc">Description</label>
+            <textarea class="form-input" id="a_del_desc" name="description" rows="2" placeholder="Optional details about this commitment…"></textarea>
+          </div>
+          <div class="row g-2">
+            <div class="col-6">
+              <label class="form-label" for="a_del_due">Due Date</label>
+              <input type="date" class="form-input" id="a_del_due" name="due_date">
+            </div>
+            <div class="col-6">
+              <label class="form-label" for="a_del_status">Status</label>
+              <select class="form-input" id="a_del_status" name="status">
+                {% for s in deliverable_statuses %}
+                  <option value="{{ s }}" {% if s == "Pending" %}selected{% endif %}>{{ s }}</option>
+                {% endfor %}
+              </select>
+            </div>
+          </div>
+        </div>
+        <div class="modal-footer">
+          <button type="button" class="btn-export" data-bs-dismiss="modal">Cancel</button>
+          <button type="submit" class="btn-primary-solid"><i class="bi bi-check2-circle"></i> Save Deliverable</button>
+        </div>
+      </form>
+    </div>
+  </div>
+</div>
+
+<!-- Edit Deliverable Modal -->
+<div class="modal fade" id="editDeliverableModal" tabindex="-1" aria-hidden="true">
+  <div class="modal-dialog">
+    <div class="modal-content" style="border-radius: var(--radius-lg); border: 1px solid var(--border);">
+      <form method="POST" id="editDelForm" action="#">
+        <div class="modal-header">
+          <h5 class="modal-title">Edit Deliverable</h5>
+          <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+        </div>
+        <div class="modal-body">
+          <div class="form-group full mb-3">
+            <label class="form-label" for="ed_name">Deliverable Name <span class="req">*</span></label>
+            <input type="text" class="form-input" id="ed_name" name="name" required>
+          </div>
+          <div class="form-group full mb-3">
+            <label class="form-label" for="ed_description">Description</label>
+            <textarea class="form-input" id="ed_description" name="description" rows="2"></textarea>
+          </div>
+          <div class="row g-2">
+            <div class="col-6">
+              <label class="form-label" for="ed_due_date">Due Date</label>
+              <input type="date" class="form-input" id="ed_due_date" name="due_date">
+            </div>
+            <div class="col-6">
+              <label class="form-label" for="ed_status">Status</label>
+              <select class="form-input" id="ed_status" name="status">
+                {% for s in deliverable_statuses %}
+                  <option value="{{ s }}">{{ s }}</option>
+                {% endfor %}
+              </select>
+            </div>
+          </div>
+        </div>
+        <div class="modal-footer">
+          <button type="button" class="btn-export" data-bs-dismiss="modal">Cancel</button>
+          <button type="submit" class="btn-primary-solid"><i class="bi bi-check2-circle"></i> Save Changes</button>
+        </div>
+      </form>
+    </div>
+  </div>
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+<script>
+  const sidebar = document.getElementById('sidebar');
+  const overlay = document.getElementById('sidebarOverlay');
+  document.getElementById('sidebarToggle')?.addEventListener('click', () => {
+    sidebar.classList.toggle('show');
+    overlay.classList.toggle('show');
+  });
+  overlay?.addEventListener('click', () => {
+    sidebar.classList.remove('show');
+    overlay.classList.remove('show');
+  });
+
+  document.getElementById('editDeliverableModal').addEventListener('show.bs.modal', function(event) {
+    const btn = event.relatedTarget;
+    const delId = btn.getAttribute('data-del-id');
+    document.getElementById('editDelForm').action = `/sponsors/{{ sponsor.id }}/deliverables/${delId}/edit`;
+    document.getElementById('ed_name').value = btn.getAttribute('data-del-name');
+    document.getElementById('ed_description').value = btn.getAttribute('data-del-description');
+    document.getElementById('ed_due_date').value = btn.getAttribute('data-del-due-date');
+    document.getElementById('ed_status').value = btn.getAttribute('data-del-status');
+  });
+</script>
+
+</body>
+</html>

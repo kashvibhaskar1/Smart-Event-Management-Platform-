@@ -1,0 +1,876 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Registration Command Center</title>
+
+<!-- Google Fonts -->
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600;700&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+
+<!-- Bootstrap 5 -->
+<link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
+<!-- Bootstrap Icons -->
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.css">
+
+<!-- Custom Stylesheet -->
+<link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+</head>
+<body>
+
+<!-- ============ SIDEBAR OVERLAY (mobile) ============ -->
+<div class="sidebar-overlay" id="sidebarOverlay"></div>
+
+<!-- ============ SIDEBAR ============ -->
+<aside class="sidebar" id="sidebar">
+  <div class="sidebar-brand">
+    <div class="brand-mark">RI</div>
+    <div class="brand-text">
+      <div class="brand-title">Registration Intelligence</div>
+      <div class="brand-sub">Attendee Management</div>
+    </div>
+  </div>
+  <div class="sidebar-divider"></div>
+
+  <nav class="sidebar-nav">
+    <div class="sidebar-label">Main</div>
+    <a href="/dashboard" class="nav-item-link active"><i class="bi bi-speedometer2"></i> Dashboard</a>
+    <a href="/register" class="nav-item-link"><i class="bi bi-person-plus"></i> Registrations</a>
+    <a href="/attendees" class="nav-item-link"><i class="bi bi-people"></i> Attendees</a>
+    <a href="/venues" class="nav-item-link"><i class="bi bi-building"></i> Venues</a>
+    <a href="/speakers" class="nav-item-link"><i class="bi bi-mic"></i> Speakers</a>
+    <a href="/sessions" class="nav-item-link"><i class="bi bi-calendar3"></i> Sessions</a>
+    <a href="/sponsors" class="nav-item-link"><i class="bi bi-briefcase"></i> Sponsors <span class="badge-mini">New</span></a>
+    <a href="/analytics" class="nav-item-link"><i class="bi bi-graph-up-arrow"></i> Analytics</a>
+
+    <div class="sidebar-label mt-3">Intelligence</div>
+    <a href="/intelligence" class="nav-item-link"><i class="bi bi-cpu"></i> Intelligence Engine <span class="badge-mini">New</span></a>
+    <a href="/ai_insights" class="nav-item-link"><i class="bi bi-stars"></i> AI Insights <span class="badge-mini">New</span></a>
+    <a href="/email_logs" class="nav-item-link"><i class="bi bi-envelope-check"></i> Email Logs</a>
+
+    <div class="sidebar-label mt-3">System</div>
+    <a href="/settings" class="nav-item-link"><i class="bi bi-gear"></i> Settings</a>
+  </nav>
+
+  <div class="sidebar-footer">
+    <div class="upgrade-card">
+      <i class="bi bi-shield-check me-1"></i> All systems operational
+    </div>
+  </div>
+</aside>
+
+<!-- ============ TOPBAR ============ -->
+<header class="topbar">
+  <button class="sidebar-toggle-btn" id="sidebarToggle" aria-label="Toggle sidebar">
+    <i class="bi bi-list fs-5"></i>
+  </button>
+
+  <div class="search-wrap">
+    <i class="bi bi-search"></i>
+    <input type="text" class="search-input" placeholder="Search attendees, emails, IDs…">
+    <span class="search-kbd">⌘K</span>
+  </div>
+
+  <div class="topbar-right">
+    <button class="icon-btn" aria-label="Notifications">
+      <i class="bi bi-bell"></i>
+      <span class="ping-dot"></span>
+    </button>
+    <button class="icon-btn" aria-label="Help">
+      <i class="bi bi-question-circle"></i>
+    </button>
+
+    <div class="dropdown">
+      <div class="admin-profile" data-bs-toggle="dropdown" aria-expanded="false">
+        <div class="admin-avatar">AD</div>
+        <div class="admin-name">
+          <div class="name">Admin User</div>
+          <div class="role">Super Admin</div>
+        </div>
+        <i class="bi bi-chevron-down text-secondary" style="font-size:.7rem;"></i>
+      </div>
+      <ul class="dropdown-menu dropdown-menu-end mt-2">
+        <li><a class="dropdown-item" href="#"><i class="bi bi-person me-2"></i>Profile</a></li>
+        <li><a class="dropdown-item" href="/settings"><i class="bi bi-gear me-2"></i>Settings</a></li>
+        <li><hr class="dropdown-divider"></li>
+        <li><a class="dropdown-item" href="/logout"><i class="bi bi-box-arrow-right me-2"></i>Sign out</a></li>
+      </ul>
+    </div>
+  </div>
+</header>
+
+<!-- ============ MAIN CONTENT ============ -->
+<main class="main-content">
+
+  <!-- ============ EVENT INFO BAR ============ -->
+  <div class="event-info-bar">
+    <div class="event-info-item">
+      <div class="info-icon"><i class="bi bi-clock"></i></div>
+      <div>
+        <div class="info-label">Current Time</div>
+        <div class="info-value" id="liveClock">--:--:--</div>
+      </div>
+    </div>
+  </div>
+
+  <div class="page-heading">
+    <div>
+      <div class="eyebrow">Live Overview</div>
+      <h1>Registration Command Center</h1>
+      <p>Real-time registration &amp; attendee tracking for your event.</p>
+    </div>
+    <div class="d-flex gap-2">
+      <button class="btn-export"><i class="bi bi-download"></i> Export report</button>
+      <a href="/register" class="btn-primary-solid"><i class="bi bi-plus-lg"></i> New registration</a>
+    </div>
+  </div>
+
+  <!-- ============================================================
+       MILESTONE 4, PART 2 — EXECUTIVE DASHBOARD LAYER
+       Everything in this block is NEW. Nothing below it (existing
+       stat cards, charts, AI Insights, tables) has been changed.
+  ============================================================ -->
+
+  <!-- ============ EVENT HEALTH ============ -->
+  <div class="panel mb-3" style="border-left:5px solid var(--{{ event_health.color }});">
+    <div class="d-flex align-items-center justify-content-between flex-wrap gap-3">
+      <div class="d-flex align-items-center gap-3">
+        <div class="stat-icon" style="background:var(--{{ event_health.color }}-soft);color:var(--{{ event_health.color }});width:56px;height:56px;font-size:1.5rem;">
+          {% if event_health.status == "Healthy" %}<i class="bi bi-check-circle-fill"></i>
+          {% elif event_health.status == "Needs Attention" %}<i class="bi bi-exclamation-triangle-fill"></i>
+          {% elif event_health.status == "At Risk" %}<i class="bi bi-exclamation-octagon-fill"></i>
+          {% else %}<i class="bi bi-question-circle"></i>{% endif %}
+        </div>
+        <div>
+          <div class="panel-sub mb-1">Event Health</div>
+          <div style="font-size:1.4rem;font-weight:700;color:var(--{{ event_health.color }});">{{ event_health.status }}</div>
+          <div class="text-muted" style="font-size:.82rem;">{{ event_health.detail }}</div>
+        </div>
+      </div>
+      <a href="/intelligence" class="btn-export"><i class="bi bi-cpu"></i> Open Intelligence Engine</a>
+    </div>
+  </div>
+
+  <!-- ============ EXECUTIVE KPIs ============ -->
+  <div class="row g-3 mb-3 row-cols-2 row-cols-xl-4">
+    <div class="col">
+      <div class="stat-card">
+        <div class="stat-top"><div class="stat-icon success"><i class="bi bi-graph-up-arrow"></i></div></div>
+        <div class="stat-value">{{ attendance_rate }}%</div>
+        <div class="stat-title">Attendance Rate</div>
+      </div>
+    </div>
+    <div class="col">
+      <div class="stat-card">
+        <div class="stat-top"><div class="stat-icon" style="background:var(--purple-soft);color:var(--purple);"><i class="bi bi-briefcase"></i></div></div>
+        <div class="stat-value">{{ total_sponsors }}</div>
+        <div class="stat-title">Sponsors {% if avg_sponsor_score is not none %}<span class="text-muted" style="font-weight:400;">(avg {{ avg_sponsor_score }}/100)</span>{% endif %}</div>
+      </div>
+    </div>
+    <div class="col">
+      <div class="stat-card">
+        <div class="stat-top"><div class="stat-icon" style="background:#FFF3EC;color:#EA580C;"><i class="bi bi-exclamation-triangle"></i></div></div>
+        <div class="stat-value" style="color:{% if open_incidents_count > 0 %}#EA580C{% else %}inherit{% endif %};">{{ open_incidents_count }}</div>
+        <div class="stat-title">Open Incidents {% if critical_incidents_count > 0 %}<span style="color:var(--danger);font-weight:600;">({{ critical_incidents_count }} critical)</span>{% endif %}</div>
+      </div>
+    </div>
+    <div class="col">
+      <div class="stat-card">
+        <div class="stat-top"><div class="stat-icon blue"><i class="bi bi-building"></i></div></div>
+        <div class="stat-value">{{ avg_venue_utilization if avg_venue_utilization is not none else "—" }}{% if avg_venue_utilization is not none %}%{% endif %}</div>
+        <div class="stat-title">Venue Utilization</div>
+      </div>
+    </div>
+    <div class="col">
+      <div class="stat-card">
+        <div class="stat-top"><div class="stat-icon" style="background:var(--danger-soft);color:var(--danger);"><i class="bi bi-bell-fill"></i></div></div>
+        <div class="stat-value" style="color:{% if total_active_alerts > 0 %}var(--danger){% else %}inherit{% endif %};">{{ total_active_alerts }}</div>
+        <div class="stat-title">Active Alerts</div>
+      </div>
+    </div>
+    <div class="col">
+      <div class="stat-card">
+        <div class="stat-top"><div class="stat-icon slate"><i class="bi bi-calendar3"></i></div></div>
+        <div class="stat-value">{{ total_sessions }}</div>
+        <div class="stat-title">Total Sessions</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ============ EXECUTIVE ALERTS ============ -->
+  <div class="row g-3 mb-3">
+    <div class="col-12">
+      <div class="panel">
+        <div class="panel-header">
+          <div>
+            <h2>Executive Alerts</h2>
+            <div class="panel-sub">{{ critical_alerts_count }} critical, {{ warning_alerts_count }} warning — most important shown here</div>
+          </div>
+          <a href="/intelligence" class="btn-export"><i class="bi bi-arrow-right"></i> View all</a>
+        </div>
+        {% if not intelligence_available %}
+          <div class="empty-state"><i class="bi bi-wifi-off"></i> Intelligence Engine is temporarily unavailable.</div>
+        {% elif top_alerts %}
+          <div class="exec-alert-list">
+            {% for a in top_alerts %}
+            <div class="exec-alert-row">
+              <div class="exec-alert-icon" style="background:var(--{{ 'danger' if a.severity == 'Critical' else 'warning' }}-soft);color:var(--{{ 'danger' if a.severity == 'Critical' else 'warning' }});">
+                <i class="bi {% if a.severity == 'Critical' %}bi-exclamation-octagon-fill{% else %}bi-exclamation-triangle-fill{% endif %}"></i>
+              </div>
+              <div class="exec-alert-body">
+                <p class="exec-alert-message"><strong>{{ a.alert_type }}</strong> — {{ a.message }}</p>
+                {% if a.recommendation %}
+                  <p class="exec-alert-recommendation"><i class="bi bi-lightbulb-fill"></i><span>{{ a.recommendation }}</span></p>
+                {% endif %}
+              </div>
+            </div>
+            {% endfor %}
+          </div>
+        {% else %}
+          <div class="empty-state"><i class="bi bi-shield-check"></i> No active risks detected across the event.</div>
+        {% endif %}
+      </div>
+    </div>
+  </div>
+
+  <!-- ============ EXECUTIVE TRENDS ============ -->
+  <div class="row g-3 mb-3 row-cols-1 row-cols-lg-3">
+    <div class="col">
+      <div class="panel h-100">
+        <div class="panel-header">
+          <div>
+            <h2>Check-in Trend</h2>
+            <div class="panel-sub">Daily check-ins, real timestamps</div>
+          </div>
+        </div>
+        {% if checkin_trend_labels %}
+          <div class="chart-holder" style="height:210px;">
+            <canvas id="checkinTrendChart"></canvas>
+          </div>
+        {% else %}
+          <div class="empty-state"><i class="bi bi-box-arrow-in-right"></i> No check-ins recorded yet.</div>
+        {% endif %}
+      </div>
+    </div>
+    <div class="col">
+      <div class="panel h-100">
+        <div class="panel-header">
+          <div>
+            <h2>Venue Utilization</h2>
+            <div class="panel-sub">Registered vs. real capacity</div>
+          </div>
+        </div>
+        {% if intel_session_labels %}
+          <div class="chart-holder" style="height:210px;">
+            <canvas id="venueUtilChart"></canvas>
+          </div>
+        {% else %}
+          <div class="empty-state"><i class="bi bi-building"></i> No sessions with a venue yet.</div>
+        {% endif %}
+      </div>
+    </div>
+    <div class="col">
+      <div class="panel h-100">
+        <div class="panel-header">
+          <div>
+            <h2>Sponsor Performance</h2>
+            <div class="panel-sub">Real Sponsorship Agent scores</div>
+          </div>
+        </div>
+        {% if total_sponsors %}
+          <div class="chart-holder" style="height:210px;">
+            <canvas id="sponsorPerfChart"></canvas>
+          </div>
+          <div class="legend-row">
+            <div class="legend-item"><span class="dot" style="background:#16A34A;"></span> Excellent ({{ sponsor_status_counts.get('Excellent', 0) }})</div>
+            <div class="legend-item"><span class="dot" style="background:#2563EB;"></span> Good ({{ sponsor_status_counts.get('Good', 0) }})</div>
+            <div class="legend-item"><span class="dot" style="background:#DC2626;"></span> At Risk ({{ sponsor_status_counts.get('At Risk', 0) }})</div>
+          </div>
+        {% else %}
+          <div class="empty-state"><i class="bi bi-briefcase"></i> No sponsors added yet.</div>
+        {% endif %}
+      </div>
+    </div>
+  </div>
+
+  <div class="sidebar-label mb-2" style="padding-left:2px;">Operational Detail</div>
+
+  <!-- ============ STAT CARDS ============ -->
+  <div class="row g-3 mb-3 row-cols-2 row-cols-xl-5">
+    <div class="col">
+      <div class="stat-card">
+        <div class="stat-top">
+          <div class="stat-icon blue"><i class="bi bi-person-lines-fill"></i></div>
+        </div>
+        <div class="stat-value">{{ total }}</div>
+        <div class="stat-title">Total Registrations</div>
+      </div>
+    </div>
+
+    <div class="col">
+      <div class="stat-card">
+        <div class="stat-top">
+          <div class="stat-icon purple"><i class="bi bi-person-check"></i></div>
+        </div>
+        <div class="stat-value">{{ registered }}</div>
+        <div class="stat-title">Registered</div>
+      </div>
+    </div>
+
+    <div class="col">
+      <div class="stat-card">
+        <div class="stat-top">
+          <div class="stat-icon success"><i class="bi bi-box-arrow-in-right"></i></div>
+        </div>
+        <div class="stat-value">{{ checked_in }}</div>
+        <div class="stat-title">Checked In</div>
+      </div>
+    </div>
+
+    <div class="col">
+      <div class="stat-card">
+        <div class="stat-top">
+          <div class="stat-icon slate"><i class="bi bi-box-arrow-right"></i></div>
+        </div>
+        <div class="stat-value">{{ checked_out }}</div>
+        <div class="stat-title">Checked Out</div>
+      </div>
+    </div>
+
+    <div class="col">
+      <div class="stat-card">
+        <div class="stat-top">
+          <div class="stat-icon blue"><i class="bi bi-buildings"></i></div>
+        </div>
+        <div class="stat-value">{{ inside }}</div>
+        <div class="stat-title">Currently Inside Venue</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ============ CHARTS ROW 1 ============ -->
+  <div class="row g-3 mb-3">
+    <div class="col-lg-8">
+      <div class="panel">
+        <div class="panel-header">
+          <div>
+            <h2>Registration Trend</h2>
+            <div class="panel-sub">Daily sign-ups over the last 14 days</div>
+          </div>
+          <div class="chip-toggle">
+            <button class="active">14D</button>
+            <button>30D</button>
+            <button>90D</button>
+          </div>
+        </div>
+        <div class="chart-holder" style="height:270px;">
+          <canvas id="trendChart"></canvas>
+        </div>
+      </div>
+    </div>
+
+    <div class="col-lg-4">
+      <div class="panel">
+        <div class="panel-header">
+          <div>
+            <h2>Gender Distribution</h2>
+            <div class="panel-sub">Share of registered attendees</div>
+          </div>
+        </div>
+        <div class="chart-holder" style="height:190px;">
+          <canvas id="genderChart"></canvas>
+        </div>
+        <div class="legend-row">
+          <div class="legend-item"><span class="dot" style="background:#2563EB;"></span> Male</div>
+          <div class="legend-item"><span class="dot" style="background:#16A34A;"></span> Female</div>
+          <div class="legend-item"><span class="dot" style="background:#7C3AED;"></span> Other</div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ============ CHARTS ROW 2 ============ -->
+  <div class="row g-3 mb-3">
+    <div class="col-12">
+      <div class="panel">
+        <div class="panel-header">
+          <div>
+            <h2>State-wise Registrations</h2>
+            <div class="panel-sub">Top contributing states across India</div>
+          </div>
+          <span class="panel-tag"><i class="bi bi-geo-alt me-1"></i>Geo breakdown</span>
+        </div>
+        <div class="chart-holder" style="height:240px;">
+          <canvas id="stateChart"></canvas>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ============ AI INSIGHTS PANEL ============ -->
+  <div class="ai-panel mb-3">
+    <div class="d-flex align-items-center gap-3 mb-3">
+      <div class="ai-panel-header-icon"><i class="bi bi-stars"></i></div>
+      <div>
+        <h2 class="mb-0" style="font-size:.98rem;font-weight:600;">AI Insights</h2>
+        <div class="panel-sub">Event health, risks and recommendations from the Intelligence Engine, plus registration patterns</div>
+      </div>
+      <span class="panel-tag ms-auto d-none d-sm-inline-flex"><i class="bi bi-arrow-repeat me-1"></i>Updated live</span>
+    </div>
+
+    <div class="row g-3">
+      <div class="col-md-6 col-lg-3">
+        <div class="ai-insight-card">
+          <div class="ai-insight-icon" style="background:var(--{{ event_health.color }}-soft);color:var(--{{ event_health.color }});">
+            {% if event_health.status == "Healthy" %}<i class="bi bi-check-circle-fill"></i>
+            {% elif event_health.status == "Needs Attention" %}<i class="bi bi-exclamation-triangle-fill"></i>
+            {% elif event_health.status == "At Risk" %}<i class="bi bi-exclamation-octagon-fill"></i>
+            {% else %}<i class="bi bi-question-circle"></i>{% endif %}
+          </div>
+          <p>Event Health: <strong>{{ event_health.status }}</strong></p>
+        </div>
+      </div>
+      <div class="col-md-6 col-lg-3">
+        <div class="ai-insight-card">
+          <div class="ai-insight-icon" style="background:var(--{{ 'danger' if top_risk_alert and top_risk_alert.severity == 'Critical' else 'warning' if top_risk_alert else 'success' }}-soft);color:var(--{{ 'danger' if top_risk_alert and top_risk_alert.severity == 'Critical' else 'warning' if top_risk_alert else 'success' }});">
+            <i class="bi {% if top_risk_alert %}bi-radar{% else %}bi-shield-check{% endif %}"></i>
+          </div>
+          {% if top_risk_alert %}
+            <p>Top Risk: <strong>{{ top_risk_alert.alert_type }}</strong></p>
+          {% else %}
+            <p>Top Risk: <strong>None detected</strong></p>
+          {% endif %}
+        </div>
+      </div>
+      <div class="col-md-6 col-lg-3">
+        <div class="ai-insight-card">
+          <div class="ai-insight-icon" style="background:var(--blue-soft);color:var(--blue);">
+            <i class="bi bi-lightbulb-fill"></i>
+          </div>
+          {% if top_risk_recommendation_short %}
+            <p>Recommended: <strong>{{ top_risk_recommendation_short }}</strong></p>
+          {% else %}
+            <p>Recommended: <strong>No action needed right now</strong></p>
+          {% endif %}
+        </div>
+      </div>
+      <div class="col-md-6 col-lg-3">
+        <div class="ai-insight-card">
+          <div class="ai-insight-icon" style="background:var(--{{ 'success' if reg_pace_direction == 'up' else 'danger' if reg_pace_direction == 'down' else 'slate' }}-soft);color:var(--{{ 'success' if reg_pace_direction == 'up' else 'danger' if reg_pace_direction == 'down' else 'slate' }});">
+            <i class="bi {% if reg_pace_direction == 'up' %}bi-graph-up-arrow{% elif reg_pace_direction == 'down' %}bi-graph-down-arrow{% else %}bi-dash-lg{% endif %}"></i>
+          </div>
+          <p>Registration Pace: <strong>{{ reg_pace_current }}</strong> <span class="text-muted" style="font-weight:400;">(prev {{ reg_pace_previous }})</span></p>
+        </div>
+      </div>
+    </div>
+
+    <div class="row g-3 mt-1">
+      <div class="col-md-6 col-lg-3">
+        <div class="ai-insight-card">
+          <div class="ai-insight-icon" style="background:var(--blue-soft);color:var(--blue);">
+            <i class="bi bi-geo-alt-fill"></i>
+          </div>
+          <p>Most Registered City: <strong>{{ top_city }}</strong></p>
+        </div>
+      </div>
+      <div class="col-md-6 col-lg-3">
+        <div class="ai-insight-card">
+          <div class="ai-insight-icon" style="background:var(--success-soft);color:var(--success);">
+            <i class="bi bi-person-badge-fill"></i>
+          </div>
+          <p>Average Age: <strong>{{ avg_age }}</strong></p>
+        </div>
+      </div>
+      <div class="col-md-6 col-lg-3">
+        <div class="ai-insight-card">
+          <div class="ai-insight-icon" style="background:var(--purple-soft);color:var(--purple);">
+            <i class="bi bi-people-fill"></i>
+          </div>
+          <p>Most Common Gender: <strong>{{ top_gender }}</strong></p>
+        </div>
+      </div>
+      <div class="col-md-6 col-lg-3">
+        <div class="ai-insight-card">
+          <div class="ai-insight-icon" style="background:var(--blue-soft);color:var(--blue);">
+            <i class="bi bi-box-arrow-in-right"></i>
+          </div>
+          <p>Total Checked In: <strong>{{ checked_in }}</strong></p>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ============ ATTENDEES TABLE + RECENT ACTIVITY ============ -->
+  <div class="row g-3">
+    <div class="col-lg-8">
+      <div class="table-panel h-100">
+        <div class="panel-header">
+          <div>
+            <h2>Recent Registrations</h2>
+            <div class="panel-sub">Latest attendees added to the system</div>
+          </div>
+          <a href="#" class="btn-export"><i class="bi bi-arrow-right"></i> View all</a>
+        </div>
+
+        <div class="table-toolbar">
+          <div class="table-search">
+            <i class="bi bi-search"></i>
+            <input type="text" id="attendeeSearch" placeholder="Search by name or email…">
+          </div>
+          <select class="table-filter" id="statusFilter">
+            <option value="all">All</option>
+            <option value="registered">Registered</option>
+            <option value="checked-in">Checked In</option>
+            <option value="checked-out">Checked Out</option>
+          </select>
+        </div>
+
+        <div class="table-responsive">
+          <table class="reg-table" id="attendeeTable">
+            <thead>
+              <tr>
+                <th>Registration ID</th>
+                <th>Full Name</th>
+                <th>Email</th>
+                <th>Organization</th>
+                <th>City</th>
+                <th>Status</th>
+                <th>Registration Time</th>
+                <th class="text-end">Actions</th>
+              </tr>
+            </thead>
+            <tbody>
+              {% for attendee in attendees %}
+              <tr
+                {% if attendee.status == 'Registered' %}data-status="registered"
+                {% elif attendee.status == 'Checked In' %}data-status="checked-in"
+                {% elif attendee.status == 'Checked Out' %}data-status="checked-out"
+                {% endif %}
+                data-name="{{ attendee.fullname|lower }}" data-email="{{ attendee.email|lower }}">
+                <td>
+                  <span class="attendee-id">#{{ attendee.id }}</span>
+                </td>
+                <td>
+                  <div class="attendee-name">
+                    <div class="name-avatar">{{ attendee.fullname[0]|upper }}</div>
+                    <div>
+                      <div class="full-name">{{ attendee.fullname }}</div>
+                    </div>
+                  </div>
+                </td>
+                <td>{{ attendee.email }}</td>
+                <td>{{ attendee.organization }}</td>
+                <td>{{ attendee.city }}</td>
+                <td>
+                  {% if attendee.status == 'Registered' %}
+                    <span class="status-badge" style="background:var(--blue-soft);color:var(--blue);"><span class="dot-sm" style="background:var(--blue);"></span>Registered</span>
+                  {% elif attendee.status == 'Checked In' %}
+                    <span class="status-badge checked-in"><span class="dot-sm"></span>Checked In</span>
+                  {% elif attendee.status == 'Checked Out' %}
+                    <span class="status-badge" style="background:var(--danger-soft);color:var(--danger);"><span class="dot-sm" style="background:var(--danger);"></span>Checked Out</span>
+                  {% endif %}
+                </td>
+                <td>{{ attendee.registration_time }}</td>
+                <td class="text-end">
+                  <div class="row-actions justify-content-end">
+                    {% if attendee.status == 'Registered' %}
+                      <a href="/checkin/{{ attendee.id }}" class="status-badge" style="background:var(--blue-soft);color:var(--blue);cursor:pointer;">
+                        <i class="bi bi-box-arrow-in-right"></i> Check In
+                      </a>
+                    {% elif attendee.status == 'Checked In' %}
+                      <a href="/checkout/{{ attendee.id }}" class="status-badge" style="background:var(--success-soft);color:var(--success);cursor:pointer;">
+                        <i class="bi bi-box-arrow-right"></i> Check Out
+                      </a>
+                    {% elif attendee.status == 'Checked Out' %}
+                      <span class="status-badge" style="background:var(--slate-soft);color:var(--slate);">
+                        <i class="bi bi-check2-circle"></i> Completed
+                      </span>
+                    {% endif %}
+                  </div>
+                </td>
+              </tr>
+              {% else %}
+              <tr>
+                <td colspan="8">
+                  <div class="empty-state">
+                    <i class="bi bi-inbox"></i>
+                    No registrations yet. New attendees will appear here.
+                  </div>
+                </td>
+              </tr>
+              {% endfor %}
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+
+    <!-- ============ RECENT ACTIVITY ============ -->
+    <div class="col-lg-4">
+      <div class="panel h-100">
+        <div class="panel-header">
+          <div>
+            <h2>Recent Activity</h2>
+            <div class="panel-sub">Latest actions across the event</div>
+          </div>
+        </div>
+        <div class="activity-list">
+          {% for attendee in attendees %}
+          <div class="activity-item">
+            <div class="activity-icon {% if attendee.status == 'Registered' %}new-reg{% elif attendee.status == 'Checked In' %}check-in{% else %}check-out{% endif %}">
+              <i class="bi {% if attendee.status == 'Registered' %}bi-person-plus{% elif attendee.status == 'Checked In' %}bi-box-arrow-in-right{% else %}bi-box-arrow-right{% endif %}"></i>
+            </div>
+            <div class="activity-body">
+              <div class="activity-text">
+                <strong>{{ attendee.fullname }}</strong>
+                {% if attendee.status == 'Registered' %}registered.
+                {% elif attendee.status == 'Checked In' %}checked in.
+                {% else %}checked out.
+                {% endif %}
+              </div>
+              <div class="activity-time">{{ attendee.registration_time }}</div>
+            </div>
+          </div>
+          {% else %}
+          <div class="empty-state">
+            <i class="bi bi-inbox"></i>
+            No recent activity yet.
+          </div>
+          {% endfor %}
+        </div>
+      </div>
+    </div>
+  </div>
+
+</main>
+
+<!-- Bootstrap JS -->
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+<!-- Chart.js -->
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.4/dist/chart.umd.min.js"></script>
+
+<script>
+  // ---- Sidebar toggle (mobile) ----
+  const sidebar = document.getElementById('sidebar');
+  const overlay = document.getElementById('sidebarOverlay');
+  const toggleBtn = document.getElementById('sidebarToggle');
+
+  function toggleSidebar(){
+    sidebar.classList.toggle('show');
+    overlay.classList.toggle('show');
+  }
+  toggleBtn?.addEventListener('click', toggleSidebar);
+  overlay?.addEventListener('click', toggleSidebar);
+
+  // ---- Live clock (placeholder for Current Time) ----
+  function updateClock(){
+    const el = document.getElementById('liveClock');
+    if(!el) return;
+    const now = new Date();
+    el.textContent = now.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit', second: '2-digit' });
+  }
+  updateClock();
+  setInterval(updateClock, 1000);
+
+  // ---- Attendee table search + filter ----
+  const searchInput = document.getElementById('attendeeSearch');
+  const statusFilter = document.getElementById('statusFilter');
+  const tableRows = document.querySelectorAll('#attendeeTable tbody tr[data-status]');
+
+  function applyTableFilters(){
+    const query = (searchInput?.value || '').toLowerCase().trim();
+    const status = statusFilter?.value || 'all';
+
+    tableRows.forEach(row => {
+      const matchesQuery = !query || row.dataset.name.includes(query) || row.dataset.email.includes(query);
+      const matchesStatus = status === 'all' || row.dataset.status === status;
+      row.style.display = (matchesQuery && matchesStatus) ? '' : 'none';
+    });
+  }
+  searchInput?.addEventListener('input', applyTableFilters);
+  statusFilter?.addEventListener('change', applyTableFilters);
+
+  // ---- Chart.js global defaults ----
+  Chart.defaults.font.family = "'Inter', sans-serif";
+  Chart.defaults.color = '#5B6472';
+  Chart.defaults.font.size = 11;
+
+  const gridColor = '#EEF1F6';
+
+  // ---- Registration Trend (Line) ----
+  new Chart(document.getElementById('trendChart'), {
+    type: 'line',
+    data: {
+      labels: {{ trend_labels|tojson }},
+      datasets: [{
+        label: 'Registrations',
+        data: {{ trend_values|tojson }},
+        borderColor: '#2563EB',
+        backgroundColor: 'rgba(37,99,235,0.06)',
+        borderWidth: 2,
+        pointRadius: 0,
+        pointHoverRadius: 5,
+        pointHoverBackgroundColor: '#2563EB',
+        pointHoverBorderColor: '#fff',
+        pointHoverBorderWidth: 2,
+        tension: 0.35,
+        fill: true
+      }]
+    },
+    options: {
+      responsive: true,
+      maintainAspectRatio: false,
+      plugins: { legend: { display: false } },
+      scales: {
+        x: { grid: { display: false }, ticks: { maxTicksLimit: 7 } },
+        y: { grid: { color: gridColor }, border: { display: false }, beginAtZero: true, ticks: { precision: 0 } }
+      }
+    }
+  });
+
+  // ---- Gender Distribution (Doughnut) ----
+  new Chart(document.getElementById('genderChart'), {
+    type: 'doughnut',
+    data: {
+      labels: {{ gender_labels|tojson }},
+      datasets: [{
+        data: {{ gender_values|tojson }},
+        backgroundColor: ['#2563EB', '#16A34A', '#7C3AED', '#EA580C', '#64748B'],
+        borderColor: '#FFFFFF',
+        borderWidth: 4,
+        hoverOffset: 4
+      }]
+    },
+    options: {
+      responsive: true,
+      maintainAspectRatio: false,
+      cutout: '72%',
+      plugins: { legend: { display: false } }
+    }
+  });
+
+  // ---- State-wise Registrations (Bar) ----
+  new Chart(document.getElementById('stateChart'), {
+    type: 'bar',
+    data: {
+      labels: {{ state_labels|tojson }},
+      datasets: [{
+        label: 'Registrations',
+        data: {{ state_values|tojson }},
+        backgroundColor: '#2563EB',
+        hoverBackgroundColor: '#1D4ED8',
+        borderRadius: 6,
+        maxBarThickness: 32
+      }]
+    },
+    options: {
+      responsive: true,
+      maintainAspectRatio: false,
+      plugins: { legend: { display: false } },
+      scales: {
+        x: { grid: { display: false } },
+        y: { grid: { color: gridColor }, border: { display: false }, beginAtZero: true, ticks: { precision: 0 } }
+      }
+    }
+  });
+
+  // ============================================================
+  // MILESTONE 4, PART 2 — Executive Dashboard charts.
+  // Each is guarded so an empty dataset (the template shows an
+  // empty-state instead of a canvas in that case) never causes a
+  // JS error here.
+  // ============================================================
+
+  // ---- Check-in Trend (Line) ----
+  const checkinTrendEl = document.getElementById('checkinTrendChart');
+  if (checkinTrendEl) {
+    new Chart(checkinTrendEl, {
+      type: 'line',
+      data: {
+        labels: {{ checkin_trend_labels|tojson }},
+        datasets: [{
+          label: 'Check-ins',
+          data: {{ checkin_trend_values|tojson }},
+          borderColor: '#16A34A',
+          backgroundColor: 'rgba(22,163,74,0.08)',
+          borderWidth: 2,
+          pointRadius: 0,
+          pointHoverRadius: 5,
+          pointHoverBackgroundColor: '#16A34A',
+          tension: 0.35,
+          fill: true
+        }]
+      },
+      options: {
+        responsive: true,
+        maintainAspectRatio: false,
+        plugins: { legend: { display: false } },
+        scales: {
+          x: { grid: { display: false }, ticks: { maxTicksLimit: 7 } },
+          y: { grid: { color: gridColor }, border: { display: false }, beginAtZero: true, ticks: { precision: 0 } }
+        }
+      }
+    });
+  }
+
+  // ---- Venue Utilization by Session (Horizontal Bar) ----
+  const venueUtilEl = document.getElementById('venueUtilChart');
+  if (venueUtilEl) {
+    new Chart(venueUtilEl, {
+      type: 'bar',
+      data: {
+        labels: {{ intel_session_labels|tojson }},
+        datasets: [{
+          label: 'Occupancy %',
+          data: {{ intel_session_util_values|tojson }},
+          backgroundColor: {{ intel_session_util_values|tojson }}.map(v => v >= 100 ? '#DC2626' : v >= 80 ? '#D97706' : '#2563EB'),
+          borderRadius: 6,
+          maxBarThickness: 22
+        }]
+      },
+      options: {
+        indexAxis: 'y',
+        responsive: true,
+        maintainAspectRatio: false,
+        plugins: { legend: { display: false } },
+        scales: {
+          x: { grid: { color: gridColor }, border: { display: false }, beginAtZero: true },
+          y: { grid: { display: false }, ticks: { autoSkip: false, font: { size: 10 } } }
+        }
+      }
+    });
+  }
+
+  // ---- Sponsor Performance (Doughnut) ----
+  const sponsorPerfEl = document.getElementById('sponsorPerfChart');
+  if (sponsorPerfEl) {
+    new Chart(sponsorPerfEl, {
+      type: 'doughnut',
+      data: {
+        labels: ['Excellent', 'Good', 'At Risk'],
+        datasets: [{
+          data: [
+            {{ sponsor_status_counts.get('Excellent', 0) }},
+            {{ sponsor_status_counts.get('Good', 0) }},
+            {{ sponsor_status_counts.get('At Risk', 0) }}
+          ],
+          backgroundColor: ['#16A34A', '#2563EB', '#DC2626'],
+          borderColor: '#FFFFFF',
+          borderWidth: 4,
+          hoverOffset: 4
+        }]
+      },
+      options: {
+        responsive: true,
+        maintainAspectRatio: false,
+        cutout: '68%',
+        plugins: { legend: { display: false } }
+      }
+    });
+  }
+</script>
+
+</body>
+</html>

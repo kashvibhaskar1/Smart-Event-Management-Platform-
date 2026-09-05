@@ -1,0 +1,342 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Speakers | Registration Command Center</title>
+
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600;700&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+
+<link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.css">
+
+<link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+</head>
+<body>
+
+<div class="sidebar-overlay" id="sidebarOverlay"></div>
+
+<aside class="sidebar" id="sidebar">
+  <div class="sidebar-brand">
+    <div class="brand-mark">RI</div>
+    <div class="brand-text">
+      <div class="brand-title">Registration Intelligence</div>
+      <div class="brand-sub">Attendee Management</div>
+    </div>
+  </div>
+  <div class="sidebar-divider"></div>
+
+  <nav class="sidebar-nav">
+    <div class="sidebar-label">Main</div>
+    <a href="/dashboard" class="nav-item-link"><i class="bi bi-speedometer2"></i> Dashboard</a>
+    <a href="/register" class="nav-item-link"><i class="bi bi-person-plus"></i> Registrations</a>
+    <a href="/attendees" class="nav-item-link"><i class="bi bi-people"></i> Attendees</a>
+    <a href="/venues" class="nav-item-link"><i class="bi bi-building"></i> Venues</a>
+    <a href="/speakers" class="nav-item-link active"><i class="bi bi-mic"></i> Speakers</a>
+    <a href="/sessions" class="nav-item-link"><i class="bi bi-calendar3"></i> Sessions</a>
+    <a href="/sponsors" class="nav-item-link"><i class="bi bi-briefcase"></i> Sponsors <span class="badge-mini">New</span></a>
+    <a href="/analytics" class="nav-item-link"><i class="bi bi-graph-up-arrow"></i> Analytics</a>
+
+    <div class="sidebar-label mt-3">Intelligence</div>
+    <a href="/intelligence" class="nav-item-link"><i class="bi bi-cpu"></i> Intelligence Engine <span class="badge-mini">New</span></a>
+    <a href="/ai_insights" class="nav-item-link"><i class="bi bi-stars"></i> AI Insights</a>
+  </nav>
+
+  <div class="sidebar-footer">
+    <div class="upgrade-card">
+      <i class="bi bi-shield-check me-1"></i> All systems operational
+    </div>
+  </div>
+</aside>
+
+<header class="topbar">
+  <button class="sidebar-toggle-btn" id="sidebarToggle" aria-label="Toggle sidebar">
+    <i class="bi bi-list fs-5"></i>
+  </button>
+  <div class="search-wrap">
+    <i class="bi bi-search"></i>
+    <input type="text" class="search-input" placeholder="Search attendees, emails, IDs…">
+  </div>
+  <div class="topbar-right">
+    <div class="dropdown">
+      <div class="admin-profile" data-bs-toggle="dropdown" aria-expanded="false">
+        <div class="admin-avatar">AD</div>
+        <div class="admin-name">
+          <div class="name">Admin User</div>
+          <div class="role">Super Admin</div>
+        </div>
+        <i class="bi bi-chevron-down text-secondary" style="font-size:.7rem;"></i>
+      </div>
+      <ul class="dropdown-menu dropdown-menu-end mt-2">
+        <li><a class="dropdown-item" href="/logout"><i class="bi bi-box-arrow-right me-2"></i>Sign out</a></li>
+      </ul>
+    </div>
+  </div>
+</header>
+
+<main class="main-content">
+
+  <div class="page-heading">
+    <div>
+      <h1>Speakers</h1>
+      <p>Maintain speaker profiles, expertise, and availability.</p>
+    </div>
+    <div>
+      <button type="button" class="btn-primary-solid" data-bs-toggle="modal" data-bs-target="#addSpeakerModal">
+        <i class="bi bi-plus-lg"></i> Add Speaker
+      </button>
+    </div>
+  </div>
+
+  <!-- Flash messages -->
+  {% with messages = get_flashed_messages(with_categories=true) %}
+    {% if messages %}
+      {% for category, message in messages %}
+        <div class="alert-box {% if category == 'success' %}alert-success{% else %}alert-error{% endif %}" style="margin-bottom:1rem;">
+          <i class="bi {% if category == 'success' %}bi-check-circle-fill{% else %}bi-exclamation-triangle-fill{% endif %}"></i>
+          <span>{{ message }}</span>
+        </div>
+      {% endfor %}
+    {% endif %}
+  {% endwith %}
+
+  <!-- Search -->
+  <div class="table-panel mb-3">
+    <div class="panel-header">
+      <div>
+        <h2>Search Speakers</h2>
+        <div class="panel-sub">Search by name or area of expertise</div>
+      </div>
+    </div>
+    <form method="GET" action="/speakers" class="row g-2 align-items-end">
+      <div class="col-md-9">
+        <label class="form-label" style="font-size:.78rem;font-weight:600;color:var(--text-secondary);">Name or Expertise</label>
+        <input type="text" name="q" class="form-input" placeholder="e.g. Priya, or e.g. Cloud Computing" value="{{ search_query }}">
+      </div>
+      <div class="col-md-3">
+        <button type="submit" class="btn-primary-solid" style="width:100%;justify-content:center;"><i class="bi bi-search"></i> Search</button>
+      </div>
+    </form>
+  </div>
+
+  <!-- Results -->
+  <div class="table-panel mb-4">
+    <div class="panel-header">
+      <div>
+        <h2>Speaker List</h2>
+        <div class="panel-sub">{{ speakers|length }} speaker(s) found</div>
+      </div>
+    </div>
+
+    <div class="table-responsive">
+      <table class="reg-table">
+        <thead>
+          <tr>
+            <th>Name</th>
+            <th>Organization</th>
+            <th>Designation</th>
+            <th>Expertise</th>
+            <th>Session Duration</th>
+            <th>Availability</th>
+            <th class="text-end">Actions</th>
+          </tr>
+        </thead>
+        <tbody>
+          {% for speaker in speakers %}
+          <tr>
+            <td>
+              <div class="attendee-name">
+                <div class="name-avatar">{{ speaker.name[0]|upper }}</div>
+                <div>
+                  <div class="full-name">{{ speaker.name }}</div>
+                  <div class="attendee-id">{{ speaker.email }}</div>
+                </div>
+              </div>
+            </td>
+            <td>{{ speaker.organization or "—" }}</td>
+            <td>{{ speaker.designation or "—" }}</td>
+            <td>{{ speaker.expertise }}</td>
+            <td>{% if speaker.session_duration %}{{ speaker.session_duration }} min{% else %}—{% endif %}</td>
+            <td>
+              {% if speaker.availability %}
+                <span class="status-badge checked-in"><span class="dot-sm"></span>Available</span>
+              {% else %}
+                <span class="status-badge" style="background:var(--danger-soft);color:var(--danger);"><span class="dot-sm" style="background:var(--danger);"></span>Unavailable</span>
+              {% endif %}
+            </td>
+            <td class="text-end">
+              <button type="button" class="action-btn" data-bs-toggle="modal" data-bs-target="#editSpeakerModal"
+                      data-speaker-id="{{ speaker.id }}"
+                      data-speaker-name="{{ speaker.name }}"
+                      data-speaker-email="{{ speaker.email }}"
+                      data-speaker-organization="{{ speaker.organization or '' }}"
+                      data-speaker-designation="{{ speaker.designation or '' }}"
+                      data-speaker-expertise="{{ speaker.expertise }}"
+                      data-speaker-duration="{{ speaker.session_duration or '' }}"
+                      data-speaker-availability="{{ 'yes' if speaker.availability else 'no' }}"
+                      aria-label="Edit speaker" title="Edit speaker">
+                <i class="bi bi-pencil"></i>
+              </button>
+            </td>
+          </tr>
+          {% else %}
+          <tr>
+            <td colspan="7">
+              <div class="empty-state">
+                <i class="bi bi-mic"></i>
+                No speakers match your search. Try a different name or expertise area.
+              </div>
+            </td>
+          </tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    </div>
+  </div>
+
+</main>
+
+<!-- Add Speaker Modal -->
+<div class="modal fade" id="addSpeakerModal" tabindex="-1" aria-hidden="true">
+  <div class="modal-dialog">
+    <div class="modal-content" style="border-radius: var(--radius-lg); border: 1px solid var(--border);">
+      <form method="POST" action="/speakers/add">
+        <div class="modal-header">
+          <h5 class="modal-title">Add New Speaker</h5>
+          <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+        </div>
+        <div class="modal-body">
+          <div class="form-group full mb-3">
+            <label class="form-label" for="s_name"><i class="bi bi-person"></i> Full Name <span class="req">*</span></label>
+            <input type="text" class="form-input" id="s_name" name="name" placeholder="e.g. Dr. Priya Sharma" required>
+          </div>
+          <div class="form-group full mb-3">
+            <label class="form-label" for="s_email"><i class="bi bi-envelope"></i> Email <span class="req">*</span></label>
+            <input type="email" class="form-input" id="s_email" name="email" placeholder="speaker@example.com" required>
+          </div>
+          <div class="row g-2 mb-3">
+            <div class="col-6">
+              <label class="form-label" for="s_organization">Organization</label>
+              <input type="text" class="form-input" id="s_organization" name="organization" placeholder="e.g. Google India">
+            </div>
+            <div class="col-6">
+              <label class="form-label" for="s_designation">Designation</label>
+              <input type="text" class="form-input" id="s_designation" name="designation" placeholder="e.g. Principal Engineer">
+            </div>
+          </div>
+          <div class="form-group full mb-3">
+            <label class="form-label" for="s_expertise"><i class="bi bi-lightbulb"></i> Expertise <span class="req">*</span></label>
+            <input type="text" class="form-input" id="s_expertise" name="expertise" placeholder="e.g. Cloud Computing, DevOps" required>
+          </div>
+          <div class="row g-2">
+            <div class="col-6">
+              <label class="form-label" for="s_duration">Session Duration <span class="text-muted" style="font-weight:400;">(minutes)</span></label>
+              <input type="number" class="form-input" id="s_duration" name="session_duration" min="1" placeholder="e.g. 45">
+            </div>
+            <div class="col-6">
+              <label class="form-label">Availability</label>
+              <select class="form-input" name="availability">
+                <option value="yes" selected>Available</option>
+                <option value="no">Unavailable</option>
+              </select>
+            </div>
+          </div>
+        </div>
+        <div class="modal-footer">
+          <button type="button" class="btn-export" data-bs-dismiss="modal">Cancel</button>
+          <button type="submit" class="btn-primary-solid"><i class="bi bi-check2-circle"></i> Save Speaker</button>
+        </div>
+      </form>
+    </div>
+  </div>
+</div>
+
+<!-- Edit Speaker Modal -->
+<div class="modal fade" id="editSpeakerModal" tabindex="-1" aria-hidden="true">
+  <div class="modal-dialog">
+    <div class="modal-content" style="border-radius: var(--radius-lg); border: 1px solid var(--border);">
+      <form method="POST" id="editSpeakerForm" action="/speakers/0/edit">
+        <div class="modal-header">
+          <h5 class="modal-title">Edit Speaker</h5>
+          <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+        </div>
+        <div class="modal-body">
+          <div class="form-group full mb-3">
+            <label class="form-label" for="e_s_name"><i class="bi bi-person"></i> Full Name <span class="req">*</span></label>
+            <input type="text" class="form-input" id="e_s_name" name="name" required>
+          </div>
+          <div class="form-group full mb-3">
+            <label class="form-label" for="e_s_email"><i class="bi bi-envelope"></i> Email <span class="req">*</span></label>
+            <input type="email" class="form-input" id="e_s_email" name="email" required>
+          </div>
+          <div class="row g-2 mb-3">
+            <div class="col-6">
+              <label class="form-label" for="e_s_organization">Organization</label>
+              <input type="text" class="form-input" id="e_s_organization" name="organization">
+            </div>
+            <div class="col-6">
+              <label class="form-label" for="e_s_designation">Designation</label>
+              <input type="text" class="form-input" id="e_s_designation" name="designation">
+            </div>
+          </div>
+          <div class="form-group full mb-3">
+            <label class="form-label" for="e_s_expertise"><i class="bi bi-lightbulb"></i> Expertise <span class="req">*</span></label>
+            <input type="text" class="form-input" id="e_s_expertise" name="expertise" required>
+          </div>
+          <div class="row g-2">
+            <div class="col-6">
+              <label class="form-label" for="e_s_duration">Session Duration <span class="text-muted" style="font-weight:400;">(minutes)</span></label>
+              <input type="number" class="form-input" id="e_s_duration" name="session_duration" min="1">
+            </div>
+            <div class="col-6">
+              <label class="form-label">Availability</label>
+              <select class="form-input" name="availability" id="e_s_availability">
+                <option value="yes">Available</option>
+                <option value="no">Unavailable</option>
+              </select>
+            </div>
+          </div>
+        </div>
+        <div class="modal-footer">
+          <button type="button" class="btn-export" data-bs-dismiss="modal">Cancel</button>
+          <button type="submit" class="btn-primary-solid"><i class="bi bi-check2-circle"></i> Save Changes</button>
+        </div>
+      </form>
+    </div>
+  </div>
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+<script>
+  const sidebar = document.getElementById('sidebar');
+  const overlay = document.getElementById('sidebarOverlay');
+  document.getElementById('sidebarToggle')?.addEventListener('click', () => {
+    sidebar.classList.toggle('show');
+    overlay.classList.toggle('show');
+  });
+  overlay?.addEventListener('click', () => {
+    sidebar.classList.remove('show');
+    overlay.classList.remove('show');
+  });
+
+  // Populate the Edit Speaker modal from the clicked row's data-* attributes
+  const editSpeakerModal = document.getElementById('editSpeakerModal');
+  editSpeakerModal.addEventListener('show.bs.modal', function (event) {
+    const btn = event.relatedTarget;
+    const speakerId = btn.getAttribute('data-speaker-id');
+
+    document.getElementById('editSpeakerForm').action = `/speakers/${speakerId}/edit`;
+    document.getElementById('e_s_name').value = btn.getAttribute('data-speaker-name');
+    document.getElementById('e_s_email').value = btn.getAttribute('data-speaker-email');
+    document.getElementById('e_s_organization').value = btn.getAttribute('data-speaker-organization');
+    document.getElementById('e_s_designation').value = btn.getAttribute('data-speaker-designation');
+    document.getElementById('e_s_expertise').value = btn.getAttribute('data-speaker-expertise');
+    document.getElementById('e_s_duration').value = btn.getAttribute('data-speaker-duration');
+    document.getElementById('e_s_availability').value = btn.getAttribute('data-speaker-availability');
+  });
+</script>
+
+</body>
+</html>

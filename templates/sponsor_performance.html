@@ -1,0 +1,520 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Sponsor Performance | Registration Command Center</title>
+
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600;700&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+
+<link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.css">
+<link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+</head>
+<body>
+
+<div class="sidebar-overlay" id="sidebarOverlay"></div>
+
+<aside class="sidebar" id="sidebar">
+  <div class="sidebar-brand">
+    <div class="brand-mark">RI</div>
+    <div class="brand-text">
+      <div class="brand-title">Registration Intelligence</div>
+      <div class="brand-sub">Attendee Management</div>
+    </div>
+  </div>
+  <div class="sidebar-divider"></div>
+
+  <nav class="sidebar-nav">
+    <div class="sidebar-label">Main</div>
+    <a href="/dashboard" class="nav-item-link"><i class="bi bi-speedometer2"></i> Dashboard</a>
+    <a href="/register" class="nav-item-link"><i class="bi bi-person-plus"></i> Registrations</a>
+    <a href="/attendees" class="nav-item-link"><i class="bi bi-people"></i> Attendees</a>
+    <a href="/venues" class="nav-item-link"><i class="bi bi-building"></i> Venues</a>
+    <a href="/speakers" class="nav-item-link"><i class="bi bi-mic"></i> Speakers</a>
+    <a href="/sessions" class="nav-item-link"><i class="bi bi-calendar3"></i> Sessions</a>
+    <a href="/sponsors" class="nav-item-link active"><i class="bi bi-briefcase"></i> Sponsors <span class="badge-mini">New</span></a>
+    <a href="/incidents" class="nav-item-link"><i class="bi bi-exclamation-triangle"></i> Incidents <span class="badge-mini">New</span></a>
+    <a href="/analytics" class="nav-item-link"><i class="bi bi-graph-up-arrow"></i> Analytics</a>
+
+    <div class="sidebar-label mt-3">Intelligence</div>
+    <a href="/ai_insights" class="nav-item-link"><i class="bi bi-stars"></i> AI Insights <span class="badge-mini">New</span></a>
+    <a href="/email_logs" class="nav-item-link"><i class="bi bi-envelope-check"></i> Email Logs</a>
+
+    <div class="sidebar-label mt-3">System</div>
+    <a href="/settings" class="nav-item-link"><i class="bi bi-gear"></i> Settings</a>
+  </nav>
+
+  <div class="sidebar-footer">
+    <div class="upgrade-card">
+      <i class="bi bi-shield-check me-1"></i> All systems operational
+    </div>
+  </div>
+</aside>
+
+<header class="topbar">
+  <button class="sidebar-toggle-btn" id="sidebarToggle" aria-label="Toggle sidebar">
+    <i class="bi bi-list fs-5"></i>
+  </button>
+
+  <div class="search-wrap">
+    <i class="bi bi-search"></i>
+    <input type="text" class="search-input" placeholder="Search attendees, emails, IDs…">
+    <span class="search-kbd">⌘K</span>
+  </div>
+
+  <div class="topbar-right">
+    <button class="icon-btn" aria-label="Notifications">
+      <i class="bi bi-bell"></i>
+      <span class="ping-dot"></span>
+    </button>
+    <button class="icon-btn" aria-label="Help">
+      <i class="bi bi-question-circle"></i>
+    </button>
+
+    <div class="dropdown">
+      <div class="admin-profile" data-bs-toggle="dropdown" aria-expanded="false">
+        <div class="admin-avatar">AD</div>
+        <div class="admin-name">
+          <div class="name">Admin User</div>
+          <div class="role">Super Admin</div>
+        </div>
+        <i class="bi bi-chevron-down text-secondary" style="font-size:.7rem;"></i>
+      </div>
+      <ul class="dropdown-menu dropdown-menu-end mt-2">
+        <li><a class="dropdown-item" href="#"><i class="bi bi-person me-2"></i>Profile</a></li>
+        <li><a class="dropdown-item" href="/settings"><i class="bi bi-gear me-2"></i>Settings</a></li>
+        <li><hr class="dropdown-divider"></li>
+        <li><a class="dropdown-item" href="/logout"><i class="bi bi-box-arrow-right me-2"></i>Sign out</a></li>
+      </ul>
+    </div>
+  </div>
+</header>
+
+<main class="main-content">
+
+  <div class="page-heading">
+    <div>
+      <div class="eyebrow">
+        <a href="/sponsors" style="color:var(--muted);text-decoration:none;">Sponsors</a>
+        <span style="color:var(--muted);"> / </span>Performance
+      </div>
+      <h1>Sponsor Performance</h1>
+      <p>Track engagement, deliverable completion and payment progress across all sponsors.</p>
+    </div>
+    <div class="d-flex gap-2">
+      <a href="/sponsors/performance/export{{ '?event_id=' ~ event_filter_id if event_filter_id else '' }}" class="btn-export">
+        <i class="bi bi-download"></i> Export CSV
+      </a>
+      <a href="/sponsors" class="btn-export"><i class="bi bi-arrow-left"></i> Back to Sponsors</a>
+    </div>
+  </div>
+
+  {% with messages = get_flashed_messages(with_categories=true) %}
+    {% if messages %}
+      {% for category, message in messages %}
+        <div class="alert-box {% if category == 'success' %}alert-success{% else %}alert-error{% endif %}" style="margin-bottom:1rem;">
+          <i class="bi {% if category == 'success' %}bi-check-circle-fill{% else %}bi-exclamation-triangle-fill{% endif %}"></i>
+          <span>{{ message }}</span>
+        </div>
+      {% endfor %}
+    {% endif %}
+  {% endwith %}
+
+  <!-- ============ SUMMARY STAT CARDS ============ -->
+  <div class="row g-3 mb-4 row-cols-2 row-cols-xl-5">
+
+    <div class="col">
+      <div class="stat-card">
+        <div class="stat-top">
+          <div class="stat-icon blue"><i class="bi bi-briefcase"></i></div>
+        </div>
+        <div class="stat-value">{{ total_sponsors }}</div>
+        <div class="stat-title">Total Sponsors</div>
+      </div>
+    </div>
+
+    <div class="col">
+      <div class="stat-card">
+        <div class="stat-top">
+          <div class="stat-icon" style="background:var(--success-soft);color:var(--success);">
+            <i class="bi bi-trophy"></i>
+          </div>
+        </div>
+        <div class="stat-value" style="color:var(--success);">{{ excellent_count }}</div>
+        <div class="stat-title">Excellent</div>
+      </div>
+    </div>
+
+    <div class="col">
+      <div class="stat-card">
+        <div class="stat-top">
+          <div class="stat-icon blue"><i class="bi bi-graph-up"></i></div>
+        </div>
+        <div class="stat-value" style="color:var(--blue);">{{ good_count }}</div>
+        <div class="stat-title">Good</div>
+      </div>
+    </div>
+
+    <div class="col">
+      <div class="stat-card">
+        <div class="stat-top">
+          <div class="stat-icon" style="background:var(--danger-soft);color:var(--danger);">
+            <i class="bi bi-exclamation-triangle"></i>
+          </div>
+        </div>
+        <div class="stat-value" style="color:var(--danger);">{{ at_risk_count }}</div>
+        <div class="stat-title">At Risk</div>
+      </div>
+    </div>
+
+    <div class="col">
+      <div class="stat-card">
+        <div class="stat-top">
+          <div class="stat-icon purple"><i class="bi bi-speedometer2"></i></div>
+        </div>
+        <div class="stat-value">{{ avg_score }}</div>
+        <div class="stat-title">Avg Score</div>
+      </div>
+    </div>
+
+  </div>
+
+  {% if not has_scoped_data %}
+  <div class="alert-box" style="background:var(--warning-soft);border-color:var(--warning);color:var(--warning);margin-bottom:1.25rem;">
+    <i class="bi bi-info-circle-fill"></i>
+    <span>No sponsors have a linked Event/Session with registered attendees yet — engagement % cannot be calculated until that's set up. Leads are still tracked and will contribute to scores once attendance data exists.</span>
+  </div>
+  {% else %}
+  <div style="font-size:.82rem;color:var(--text-muted);margin-bottom:1rem;">
+    <i class="bi bi-people me-1"></i>
+    Engagement % is calculated per sponsor, against attendees registered for that sponsor's own linked Event or Session — not the full attendee list.
+  </div>
+  {% endif %}
+
+  <!-- ============ PERFORMANCE TABLE ============ -->
+  <div class="table-panel mb-4">
+    <div class="panel-header">
+      <div>
+        <h2>Performance Breakdown</h2>
+        <div class="panel-sub">Sorted by overall score — highest first</div>
+      </div>
+      {% if events %}
+      <div>
+        <form method="GET" action="/sponsors/performance">
+          <select class="form-input" name="event_id" onchange="this.form.submit()" style="font-size:.82rem;min-width:200px;">
+            <option value="">All Events</option>
+            {% for evt in events %}
+              <option value="{{ evt.id }}" {% if event_filter_id == evt.id %}selected{% endif %}>{{ evt.name }}</option>
+            {% endfor %}
+          </select>
+        </form>
+      </div>
+      {% endif %}
+    </div>
+
+    <div class="table-responsive">
+      <table class="reg-table">
+        <thead>
+          <tr>
+            <th>Sponsor</th>
+            <th>Event</th>
+            <th>Package</th>
+            <th>Leads</th>
+            <th>Booth Visits</th>
+            <th>Interactions</th>
+            <th>Engagement %</th>
+            <th>Deliverables</th>
+            <th>Completion %</th>
+            <th>Payment %</th>
+            <th style="min-width:130px;">Score</th>
+            <th>Status</th>
+            <th class="text-end">Actions</th>
+          </tr>
+        </thead>
+        <tbody>
+          {% for item in perf_data %}
+          {% set s = item.sponsor %}
+          <tr>
+
+            <!-- Company -->
+            <td>
+              <div class="attendee-name">
+                <div class="name-avatar">{{ s.company_name[0]|upper }}</div>
+                <div>
+                  <div class="full-name">{{ s.company_name }}</div>
+                  <div class="attendee-id">ID #{{ s.id }}</div>
+                </div>
+              </div>
+            </td>
+
+            <!-- Event -->
+            <td style="min-width:140px;">
+              {% if s.event %}
+                <span style="font-size:.82rem;">{{ s.event.name }}</span>
+                {% if s.event.date_display %}
+                  <div style="font-size:.72rem;color:var(--text-muted);">{{ s.event.date_display }}</div>
+                {% endif %}
+              {% else %}
+                <span style="color:var(--text-muted);">—</span>
+              {% endif %}
+            </td>
+
+            <!-- Package -->
+            <td>
+              {% if s.package == "Platinum" %}
+                <span class="status-badge" style="background:var(--slate-soft);color:var(--slate);"><span class="dot-sm" style="background:var(--slate);"></span>Platinum</span>
+              {% elif s.package == "Gold" %}
+                <span class="status-badge" style="background:var(--blue-soft);color:var(--blue);"><span class="dot-sm" style="background:var(--blue);"></span>Gold</span>
+              {% elif s.package == "Silver" %}
+                <span class="status-badge" style="background:var(--purple-soft);color:var(--purple);"><span class="dot-sm" style="background:var(--purple);"></span>Silver</span>
+              {% else %}
+                <span class="status-badge" style="background:var(--success-soft);color:var(--success);"><span class="dot-sm" style="background:var(--success);"></span>Custom</span>
+              {% endif %}
+            </td>
+
+            <!-- Leads -->
+            <td>
+              <span style="font-weight:600;">{{ item.leads }}</span>
+              <div style="font-size:.73rem;color:var(--text-muted);">lead generated</div>
+            </td>
+
+            <!-- Booth Visits -->
+            <td>
+              <span style="font-weight:600;">{{ item.booth_visits }}</span>
+              <div style="font-size:.73rem;color:var(--text-muted);">booth visits</div>
+            </td>
+
+            <!-- Attendee Interactions -->
+            <td>
+              <span style="font-weight:600;">{{ item.attendee_interactions }}</span>
+              <div style="font-size:.73rem;color:var(--text-muted);">interactions</div>
+            </td>
+
+            <!-- Engagement % -->
+            <td>
+              {% if item.engagement_pct is not none %}
+                <span style="font-weight:600;">{{ item.engagement_pct }}%</span>
+                <div style="height:4px;background:var(--border);border-radius:99px;margin-top:4px;width:60px;">
+                  <div style="height:100%;width:{{ [item.engagement_pct, 100]|min }}%;background:var(--blue);border-radius:99px;"></div>
+                </div>
+              {% else %}
+                <span style="color:var(--text-muted);">—</span>
+                <div style="font-size:.71rem;color:var(--text-muted);">no attendees yet</div>
+              {% endif %}
+            </td>
+
+            <!-- Deliverables count -->
+            <td>
+              {% if item.total_del > 0 %}
+                <span style="font-weight:600;">{{ item.completed_del }}/{{ item.total_del }}</span>
+                <div style="font-size:.73rem;color:var(--text-muted);">completed</div>
+              {% else %}
+                <span style="color:var(--text-muted);">—</span>
+              {% endif %}
+            </td>
+
+            <!-- Delivery % -->
+            <td>
+              {% if item.total_del > 0 %}
+                <span style="font-weight:600;">{{ item.delivery_pct }}%</span>
+                <div style="height:4px;background:var(--border);border-radius:99px;margin-top:4px;width:60px;">
+                  <div style="height:100%;width:{{ item.delivery_pct }}%;
+                    {% if item.delivery_pct >= 75 %}background:var(--success);
+                    {% elif item.delivery_pct >= 40 %}background:var(--blue);
+                    {% else %}background:var(--danger);{% endif %}
+                    border-radius:99px;"></div>
+                </div>
+              {% else %}
+                <span style="color:var(--text-muted);">—</span>
+              {% endif %}
+            </td>
+
+            <!-- Payment % -->
+            <td>
+              <span style="font-weight:600;">{{ item.payment_pct }}%</span>
+              <div style="height:4px;background:var(--border);border-radius:99px;margin-top:4px;width:60px;">
+                <div style="height:100%;width:{{ item.payment_pct }}%;
+                  {% if item.payment_pct >= 75 %}background:var(--success);
+                  {% elif item.payment_pct >= 40 %}background:var(--blue);
+                  {% else %}background:var(--danger);{% endif %}
+                  border-radius:99px;"></div>
+              </div>
+            </td>
+
+            <!-- Overall score + bar -->
+            <td>
+              <div style="display:flex;align-items:center;gap:.6rem;">
+                <div style="flex:1;height:8px;background:var(--border);border-radius:99px;min-width:60px;">
+                  <div style="height:100%;width:{{ item.overall_score }}%;border-radius:99px;
+                    {% if item.perf_status == 'Excellent' %}background:var(--success);
+                    {% elif item.perf_status == 'Good' %}background:var(--blue);
+                    {% else %}background:var(--danger);{% endif %}">
+                  </div>
+                </div>
+                <span style="font-weight:700;font-size:.9rem;min-width:28px;
+                  {% if item.perf_status == 'Excellent' %}color:var(--success);
+                  {% elif item.perf_status == 'Good' %}color:var(--blue);
+                  {% else %}color:var(--danger);{% endif %}">
+                  {{ item.overall_score }}
+                </span>
+              </div>
+            </td>
+
+            <!-- Performance status badge -->
+            <td>
+              {% if item.perf_status == "Excellent" %}
+                <span class="status-badge checked-in">
+                  <i class="bi bi-trophy-fill" style="font-size:.65rem;margin-right:.25rem;"></i>Excellent
+                </span>
+              {% elif item.perf_status == "Good" %}
+                <span class="status-badge" style="background:var(--blue-soft);color:var(--blue);">
+                  <span class="dot-sm" style="background:var(--blue);"></span>Good
+                </span>
+              {% else %}
+                <span class="status-badge" style="background:var(--danger-soft);color:var(--danger);">
+                  <i class="bi bi-exclamation-triangle-fill" style="font-size:.65rem;margin-right:.25rem;"></i>At Risk
+                </span>
+              {% endif %}
+            </td>
+
+            <!-- Actions -->
+            <td class="text-end">
+              <div class="row-actions justify-content-end">
+                <button type="button" class="action-btn"
+                        data-bs-toggle="modal" data-bs-target="#editLeadsModal"
+                        data-sponsor-id="{{ s.id }}"
+                        data-sponsor-name="{{ s.company_name }}"
+                        data-sponsor-leads="{{ item.leads }}"
+                        title="Update leads count" aria-label="Update leads count">
+                  <i class="bi bi-pencil-square"></i>
+                </button>
+                <a href="/sponsors/{{ s.id }}/view" class="action-btn"
+                   title="View deliverables" aria-label="View deliverables">
+                  <i class="bi bi-eye"></i>
+                </a>
+              </div>
+            </td>
+
+          </tr>
+          {% else %}
+          <tr>
+            <td colspan="13">
+              <div class="empty-state">
+                <i class="bi bi-briefcase"></i>
+                No sponsors found. Add sponsors from the Sponsors page first.
+              </div>
+            </td>
+          </tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    </div>
+  </div>
+
+  <!-- ============ AI SPONSORSHIP INSIGHTS ============ -->
+  <div class="ai-panel mb-4">
+    <div class="d-flex align-items-center gap-3 mb-3">
+      <div class="ai-panel-header-icon"><i class="bi bi-stars"></i></div>
+      <div>
+        <h2 class="mb-0" style="font-size:.98rem;font-weight:600;">AI Sponsorship Insights</h2>
+        <div class="panel-sub">Rule-based insights generated from each sponsor's real performance data — no external AI/LLM involved</div>
+      </div>
+    </div>
+
+    {% if perf_data %}
+    <div class="row g-3">
+      {% for item in perf_data %}
+      <div class="col-md-6">
+        <div class="ai-insight-card">
+          <div style="font-weight:600;font-size:.86rem;color:var(--text-primary);margin-bottom:.4rem;">
+            {{ item.sponsor.company_name }}
+          </div>
+
+          <p style="margin:0 0 .45rem;font-size:.82rem;color:var(--text-primary);">
+            {{ item.ai_insight.summary }}
+          </p>
+
+          <p style="margin:0 0 .3rem;font-size:.8rem;color:var(--text-secondary);">
+            <strong>{{ "Note:" if item.ai_insight.insufficient else "Main issue/strength:" }}</strong>
+            {{ item.ai_insight.main_point }}
+          </p>
+
+          <p style="margin:0;font-size:.8rem;color:var(--blue);">
+            <strong>Recommended action:</strong> {{ item.ai_insight.action }}
+          </p>
+
+          {% if item.ai_insight.caveats %}
+            <p style="margin:.4rem 0 0;font-size:.71rem;color:var(--text-muted);font-style:italic;">
+              {{ item.ai_insight.caveats|join('; ')|capitalize }}.
+            </p>
+          {% endif %}
+        </div>
+      </div>
+      {% endfor %}
+    </div>
+    {% else %}
+      <div class="empty-state">
+        <i class="bi bi-stars"></i>
+        No sponsors yet — insights will appear here once sponsors are added.
+      </div>
+    {% endif %}
+  </div>
+
+</main>
+
+<!-- Edit Leads Modal -->
+<div class="modal fade" id="editLeadsModal" tabindex="-1" aria-hidden="true">
+  <div class="modal-dialog modal-sm">
+    <div class="modal-content" style="border-radius:var(--radius-lg);border:1px solid var(--border);">
+      <form method="POST" id="editLeadsForm" action="#">
+        <div class="modal-header">
+          <h5 class="modal-title">Update Leads</h5>
+          <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+        </div>
+        <div class="modal-body">
+          <p style="font-size:.85rem;color:var(--text-muted);margin-bottom:.9rem;" id="leadsModalSponsorName"></p>
+          <label class="form-label" for="leads_count_input">Leads Collected</label>
+          <input type="number" class="form-input" id="leads_count_input" name="leads_count"
+                 min="0" step="1" placeholder="e.g. 45" required>
+          <div style="font-size:.75rem;color:var(--text-muted);margin-top:.4rem;">
+            Booth visitors, badge scans, or sign-ups collected by this sponsor.
+          </div>
+        </div>
+        <div class="modal-footer">
+          <button type="button" class="btn-export" data-bs-dismiss="modal">Cancel</button>
+          <button type="submit" class="btn-primary-solid"><i class="bi bi-check2-circle"></i> Save</button>
+        </div>
+      </form>
+    </div>
+  </div>
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+<script>
+  const sidebar = document.getElementById('sidebar');
+  const overlay = document.getElementById('sidebarOverlay');
+  document.getElementById('sidebarToggle')?.addEventListener('click', () => {
+    sidebar.classList.toggle('show');
+    overlay.classList.toggle('show');
+  });
+  overlay?.addEventListener('click', () => {
+    sidebar.classList.remove('show');
+    overlay.classList.remove('show');
+  });
+
+  document.getElementById('editLeadsModal').addEventListener('show.bs.modal', function(event) {
+    const btn = event.relatedTarget;
+    const sponsorId   = btn.getAttribute('data-sponsor-id');
+    const sponsorName = btn.getAttribute('data-sponsor-name');
+    const currentLeads = btn.getAttribute('data-sponsor-leads');
+    document.getElementById('editLeadsForm').action = `/sponsors/${sponsorId}/update_leads`;
+    document.getElementById('leadsModalSponsorName').textContent = sponsorName;
+    document.getElementById('leads_count_input').value = currentLeads;
+  });
+</script>
+
+</body>
+</html>

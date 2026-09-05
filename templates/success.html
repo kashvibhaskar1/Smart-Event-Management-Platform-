@@ -1,0 +1,226 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Registration Successful | Registration Intelligence &amp; Attendee Management</title>
+
+<!-- Google Fonts -->
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600;700&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+
+<!-- Bootstrap 5 -->
+<link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
+<!-- Bootstrap Icons -->
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.css">
+
+<!-- Custom Stylesheet (shared with the rest of the app) -->
+<link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+
+<!-- Success-page-only styles (scoped here so style.css stays untouched) -->
+<style>
+  .success-page-wrap{
+    min-height: 100vh;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 2.5rem 1.25rem;
+    background:
+      radial-gradient(900px 480px at 12% -10%, rgba(37,99,235,0.12), transparent 60%),
+      radial-gradient(700px 420px at 100% 10%, rgba(22,163,74,0.08), transparent 55%),
+      linear-gradient(180deg, #F4F7FD 0%, #EEF3FC 100%);
+  }
+
+  .success-shell{ width: 100%; max-width: 720px; }
+
+  .success-card{
+    background: #FFFFFF;
+    border: 1px solid var(--border);
+    border-radius: 22px;
+    box-shadow: var(--shadow-hover);
+    padding: 2.6rem 2.4rem 2.2rem;
+    opacity: 0;
+    transform: translateY(16px);
+    animation: successCardIn .5s ease forwards;
+  }
+  @keyframes successCardIn{ to{ opacity: 1; transform: translateY(0); } }
+
+  .success-icon-wrap{
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    margin: 0 auto 1.3rem;
+  }
+  .success-icon-circle{
+    width: 84px; height: 84px;
+    border-radius: 50%;
+    background: var(--success-soft);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 2.6rem;
+    color: var(--success);
+    opacity: 0;
+    transform: scale(0.6);
+    animation: successPop .5s cubic-bezier(.34,1.56,.64,1) .1s forwards;
+  }
+  @keyframes successPop{ to{ opacity: 1; transform: scale(1); } }
+
+  .success-header{ text-align: center; margin-bottom: 1.8rem; }
+  .success-header h1{
+    font-family: var(--font-display);
+    font-size: 1.6rem;
+    font-weight: 600;
+    color: var(--text-primary);
+    margin: 0 0 .4rem;
+  }
+  .success-header p{
+    font-size: .9rem;
+    color: var(--text-secondary);
+    margin: 0;
+  }
+
+  .info-card{
+    background: var(--surface-alt);
+    border: 1px solid var(--border);
+    border-radius: var(--radius-lg);
+    padding: 1.5rem 1.6rem;
+    margin-bottom: 1.6rem;
+  }
+  .info-card-title{
+    font-size: .72rem;
+    font-weight: 600;
+    letter-spacing: .6px;
+    text-transform: uppercase;
+    color: var(--text-muted);
+    margin-bottom: 1rem;
+  }
+  .info-grid{
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 1.1rem 1.5rem;
+  }
+  .info-item{ min-width: 0; }
+  .info-item-label{
+    display: flex;
+    align-items: center;
+    gap: .4rem;
+    font-size: .72rem;
+    font-weight: 600;
+    color: var(--text-muted);
+    margin-bottom: .25rem;
+  }
+  .info-item-label i{ color: var(--blue); font-size: .8rem; }
+  .info-item-value{
+    font-size: .88rem;
+    font-weight: 600;
+    color: var(--text-primary);
+    word-break: break-word;
+  }
+
+  .success-note{
+    display: flex;
+    align-items: flex-start;
+    gap: .6rem;
+    background: var(--success-soft);
+    border: 1px solid rgba(22,163,74,0.2);
+    border-radius: var(--radius-md);
+    padding: .85rem 1rem;
+    font-size: .82rem;
+    color: #15803D;
+    margin-bottom: 1.8rem;
+  }
+  .success-note i{ font-size: 1rem; margin-top: .05rem; }
+
+  .success-actions{
+    display: flex;
+    gap: .8rem;
+    flex-wrap: wrap;
+  }
+  .success-actions a{ flex: 1; justify-content: center; }
+
+  @media (max-width: 575.98px){
+    .success-card{ padding: 2rem 1.4rem 1.8rem; border-radius: 18px; }
+    .info-grid{ grid-template-columns: 1fr; }
+    .success-actions{ flex-direction: column; }
+  }
+</style>
+</head>
+<body>
+
+<div class="success-page-wrap">
+  <div class="success-shell">
+    <div class="success-card">
+
+      <div class="success-icon-wrap">
+        <div class="success-icon-circle">
+          <i class="bi bi-check-circle-fill"></i>
+        </div>
+      </div>
+
+      <div class="success-header">
+        <h1>Registration Successful!</h1>
+        <p>Your event registration has been completed successfully.</p>
+      </div>
+
+      <div class="info-card">
+        <div class="info-card-title">Registration Details</div>
+        <div class="info-grid">
+          <div class="info-item">
+            <div class="info-item-label"><i class="bi bi-hash"></i> Registration ID</div>
+            <div class="info-item-value">#{{ attendee.id }}</div>
+          </div>
+          <div class="info-item">
+            <div class="info-item-label"><i class="bi bi-person"></i> Full Name</div>
+            <div class="info-item-value">{{ attendee.fullname }}</div>
+          </div>
+          <div class="info-item">
+            <div class="info-item-label"><i class="bi bi-envelope"></i> Email</div>
+            <div class="info-item-value">{{ attendee.email }}</div>
+          </div>
+          <div class="info-item">
+            <div class="info-item-label"><i class="bi bi-telephone"></i> Phone</div>
+            <div class="info-item-value">{{ attendee.phone }}</div>
+          </div>
+          <div class="info-item">
+            <div class="info-item-label"><i class="bi bi-building"></i> Organization</div>
+            <div class="info-item-value">{{ attendee.organization }}</div>
+          </div>
+          <div class="info-item">
+            <div class="info-item-label"><i class="bi bi-lightbulb"></i> Area of Interest</div>
+            <div class="info-item-value">{{ attendee.interest }}</div>
+          </div>
+          <div class="info-item">
+            <div class="info-item-label"><i class="bi bi-clock"></i> Registration Date &amp; Time</div>
+            <div class="info-item-value">{{ attendee.registration_time.strftime('%d %b %Y, %I:%M %p') }}</div>
+          </div>
+          <div class="info-item">
+            <div class="info-item-label"><i class="bi bi-flag"></i> Current Status</div>
+            <div class="info-item-value">
+              <span class="status-badge" style="background:var(--blue-soft);color:var(--blue);">
+                <span class="dot-sm" style="background:var(--blue);"></span>{{ attendee.status }}
+              </span>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div class="success-note">
+        <i class="bi bi-shield-check"></i>
+        <span>Thank you for registering. Your information has been securely recorded in the system.</span>
+      </div>
+
+      <div class="success-actions">
+        <a href="{{ url_for('attendee_status', attendee_id=attendee.id) }}" class="btn-export"><i class="bi bi-box-arrow-in-right"></i> View My Status</a>
+        <a href="/register" class="btn-export"><i class="bi bi-arrow-repeat"></i> Register Another Attendee</a>
+        <a href="/" class="btn-primary-solid"><i class="bi bi-house"></i> Back to Home</a>
+      </div>
+
+    </div>
+  </div>
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+</body>
+</html>

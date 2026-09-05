@@ -1,0 +1,304 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>AI Insights | Registration Command Center</title>
+
+<!-- Google Fonts -->
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600;700&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+
+<!-- Bootstrap 5 -->
+<link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
+<!-- Bootstrap Icons -->
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.css">
+
+<!-- Custom Stylesheet -->
+<link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+</head>
+<body>
+
+<!-- ============ SIDEBAR OVERLAY (mobile) ============ -->
+<div class="sidebar-overlay" id="sidebarOverlay"></div>
+
+<!-- ============ SIDEBAR ============ -->
+<aside class="sidebar" id="sidebar">
+  <div class="sidebar-brand">
+    <div class="brand-mark">RI</div>
+    <div class="brand-text">
+      <div class="brand-title">Registration Intelligence</div>
+      <div class="brand-sub">Attendee Management</div>
+    </div>
+  </div>
+  <div class="sidebar-divider"></div>
+
+  <nav class="sidebar-nav">
+    <div class="sidebar-label">Main</div>
+    <a href="/dashboard" class="nav-item-link"><i class="bi bi-speedometer2"></i> Dashboard</a>
+    <a href="/register" class="nav-item-link"><i class="bi bi-person-plus"></i> Registrations</a>
+    <a href="/attendees" class="nav-item-link"><i class="bi bi-people"></i> Attendees</a>
+    <a href="/venues" class="nav-item-link"><i class="bi bi-building"></i> Venues</a>
+    <a href="/speakers" class="nav-item-link"><i class="bi bi-mic"></i> Speakers</a>
+    <a href="/sessions" class="nav-item-link"><i class="bi bi-calendar3"></i> Sessions</a>
+    <a href="/sponsors" class="nav-item-link"><i class="bi bi-briefcase"></i> Sponsors <span class="badge-mini">New</span></a>
+    <a href="/analytics" class="nav-item-link"><i class="bi bi-graph-up-arrow"></i> Analytics</a>
+
+    <div class="sidebar-label mt-3">Intelligence</div>
+    <a href="/ai_insights" class="nav-item-link active"><i class="bi bi-stars"></i> AI Insights</a>
+    <a href="/email_logs" class="nav-item-link"><i class="bi bi-envelope-check"></i> Email Logs</a>
+
+    <div class="sidebar-label mt-3">System</div>
+    <a href="/settings" class="nav-item-link"><i class="bi bi-gear"></i> Settings</a>
+  </nav>
+
+  <div class="sidebar-footer">
+    <div class="upgrade-card">
+      <i class="bi bi-shield-check me-1"></i> All systems operational
+    </div>
+  </div>
+</aside>
+
+<!-- ============ TOPBAR ============ -->
+<header class="topbar">
+  <button class="sidebar-toggle-btn" id="sidebarToggle" aria-label="Toggle sidebar">
+    <i class="bi bi-list fs-5"></i>
+  </button>
+
+  <div class="search-wrap">
+    <i class="bi bi-search"></i>
+    <input type="text" class="search-input" placeholder="Search attendees, emails, IDs…">
+    <span class="search-kbd">⌘K</span>
+  </div>
+
+  <div class="topbar-right">
+    <button class="icon-btn" aria-label="Notifications">
+      <i class="bi bi-bell"></i>
+      <span class="ping-dot"></span>
+    </button>
+    <div class="dropdown">
+      <div class="admin-profile" data-bs-toggle="dropdown" aria-expanded="false">
+        <div class="admin-avatar">AD</div>
+        <div class="admin-name">
+          <div class="name">Admin User</div>
+          <div class="role">Super Admin</div>
+        </div>
+        <i class="bi bi-chevron-down text-secondary" style="font-size:.7rem;"></i>
+      </div>
+      <ul class="dropdown-menu dropdown-menu-end mt-2">
+        <li><a class="dropdown-item" href="#"><i class="bi bi-person me-2"></i>Profile</a></li>
+        <li><a class="dropdown-item" href="/settings"><i class="bi bi-gear me-2"></i>Settings</a></li>
+        <li><hr class="dropdown-divider"></li>
+        <li><a class="dropdown-item" href="/logout"><i class="bi bi-box-arrow-right me-2"></i>Sign out</a></li>
+      </ul>
+    </div>
+  </div>
+</header>
+
+<!-- ============ MAIN CONTENT ============ -->
+<main class="main-content">
+
+  <div class="page-heading">
+    <div>
+      <div class="eyebrow">Automated Insights</div>
+      <h1>AI Insights</h1>
+      <p>Patterns and recommendations calculated directly from your attendee database.</p>
+    </div>
+  </div>
+
+  {% if not insights %}
+
+    <div class="table-panel">
+      <div class="empty-state">
+        <i class="bi bi-inbox"></i>
+        No Data Available. Insights will appear here once attendees start registering.
+      </div>
+    </div>
+
+  {% else %}
+
+  <!-- ============ KEY METRICS ============ -->
+  <div class="row g-3 mb-3 row-cols-2 row-cols-xl-4">
+    <div class="col">
+      <div class="stat-card">
+        <div class="stat-top">
+          <div class="stat-icon blue"><i class="bi bi-person-lines-fill"></i></div>
+        </div>
+        <div class="stat-value">{{ insights.total }}</div>
+        <div class="stat-title">Total Registrations</div>
+      </div>
+    </div>
+    <div class="col">
+      <div class="stat-card">
+        <div class="stat-top">
+          <div class="stat-icon purple"><i class="bi bi-person-badge"></i></div>
+        </div>
+        <div class="stat-value">{{ insights.avg_age }}</div>
+        <div class="stat-title">Average Attendee Age</div>
+      </div>
+    </div>
+    <div class="col">
+      <div class="stat-card">
+        <div class="stat-top">
+          <div class="stat-icon success"><i class="bi bi-box-arrow-in-right"></i></div>
+        </div>
+        <div class="stat-value">{{ insights.checked_in_pct }}%</div>
+        <div class="stat-title">Checked In</div>
+      </div>
+    </div>
+    <div class="col">
+      <div class="stat-card">
+        <div class="stat-top">
+          <div class="stat-icon slate"><i class="bi bi-box-arrow-right"></i></div>
+        </div>
+        <div class="stat-value">{{ insights.checked_out_pct }}%</div>
+        <div class="stat-title">Checked Out</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ============ DETAILED INSIGHTS ============ -->
+  <div class="panel mb-3">
+    <div class="panel-header">
+      <div>
+        <h2>Detailed Insights</h2>
+        <div class="panel-sub">Calculated from current attendee records using SQLAlchemy queries and basic aggregation</div>
+      </div>
+    </div>
+
+    <div class="row g-3">
+      <div class="col-md-6 col-xl-3">
+        <div class="ai-insight-card">
+          <div class="ai-insight-icon" style="background:var(--blue-soft);color:var(--blue);"><i class="bi bi-lightbulb-fill"></i></div>
+          <p>Most Popular Interest: <strong>{{ insights.top_interest }}</strong></p>
+        </div>
+      </div>
+      <div class="col-md-6 col-xl-3">
+        <div class="ai-insight-card">
+          <div class="ai-insight-icon" style="background:var(--purple-soft);color:var(--purple);"><i class="bi bi-geo-alt-fill"></i></div>
+          <p>City with Highest Registrations: <strong>{{ insights.top_city }}</strong></p>
+        </div>
+      </div>
+      <div class="col-md-6 col-xl-3">
+        <div class="ai-insight-card">
+          <div class="ai-insight-icon" style="background:var(--success-soft);color:var(--success);"><i class="bi bi-people-fill"></i></div>
+          <p>Male vs Female: <strong>{{ insights.male_pct }}% / {{ insights.female_pct }}%</strong></p>
+        </div>
+      </div>
+      <div class="col-md-6 col-xl-3">
+        <div class="ai-insight-card">
+          <div class="ai-insight-icon" style="background:var(--slate-soft);color:var(--slate);"><i class="bi bi-building"></i></div>
+          <p>Most Common Organization: <strong>{{ insights.top_org }}</strong></p>
+        </div>
+      </div>
+      <div class="col-md-6 col-xl-3">
+        <div class="ai-insight-card">
+          <div class="ai-insight-icon" style="background:var(--blue-soft);color:var(--blue);"><i class="bi bi-briefcase-fill"></i></div>
+          <p>Most Common Designation: <strong>{{ insights.top_designation }}</strong></p>
+        </div>
+      </div>
+      <div class="col-md-6 col-xl-3">
+        <div class="ai-insight-card">
+          <div class="ai-insight-icon" style="background:var(--purple-soft);color:var(--purple);"><i class="bi bi-graph-up"></i></div>
+          <p>Avg. Registrations / Day: <strong>{{ insights.avg_per_day }}</strong></p>
+        </div>
+      </div>
+      <div class="col-md-6 col-xl-3">
+        <div class="ai-insight-card">
+          <div class="ai-insight-icon" style="background:var(--success-soft);color:var(--success);"><i class="bi bi-calendar-event"></i></div>
+          <p>Peak Registration Day: <strong>{{ insights.peak_day }}</strong></p>
+        </div>
+      </div>
+      <div class="col-md-6 col-xl-3">
+        <div class="ai-insight-card">
+          <div class="ai-insight-icon" style="background:var(--slate-soft);color:var(--slate);"><i class="bi bi-stars"></i></div>
+          <p>Most Active Interest Category: <strong>{{ insights.most_active_interest }}</strong></p>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ============ TOP 5 CITIES ============ -->
+  <div class="table-panel mb-3">
+    <div class="panel-header">
+      <div>
+        <h2>Top 5 Cities by Registrations</h2>
+        <div class="panel-sub">Ranked by number of registered attendees</div>
+      </div>
+    </div>
+    <div class="table-responsive">
+      <table class="reg-table">
+        <thead>
+          <tr>
+            <th>Rank</th>
+            <th>City</th>
+            <th>Registrations</th>
+          </tr>
+        </thead>
+        <tbody>
+          {% for city, count in insights.top_5_cities %}
+          <tr>
+            <td>#{{ loop.index }}</td>
+            <td>{{ city }}</td>
+            <td>{{ count }}</td>
+          </tr>
+          {% else %}
+          <tr>
+            <td colspan="3">
+              <div class="empty-state">
+                <i class="bi bi-inbox"></i>
+                No Data Available
+              </div>
+            </td>
+          </tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    </div>
+  </div>
+
+  <!-- ============ AI RECOMMENDATIONS ============ -->
+  <div class="ai-panel mb-3">
+    <div class="d-flex align-items-center gap-3 mb-3">
+      <div class="ai-panel-header-icon"><i class="bi bi-magic"></i></div>
+      <div>
+        <h2 class="mb-0" style="font-size:.98rem;font-weight:600;">AI Recommendations</h2>
+        <div class="panel-sub">Rule-based suggestions generated from the insights above — no external AI or LLM involved</div>
+      </div>
+    </div>
+
+    <div class="row g-3">
+      {% for rec in recommendations %}
+      <div class="col-md-6">
+        <div class="ai-insight-card">
+          <div class="ai-insight-icon" style="background:var(--blue-soft);color:var(--blue);"><i class="bi bi-check2-circle"></i></div>
+          <p style="margin-bottom:0;">{{ rec }}</p>
+        </div>
+      </div>
+      {% endfor %}
+    </div>
+  </div>
+
+  {% endif %}
+
+</main>
+
+<!-- Bootstrap JS -->
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+
+<script>
+  const sidebar = document.getElementById('sidebar');
+  const overlay = document.getElementById('sidebarOverlay');
+  const toggleBtn = document.getElementById('sidebarToggle');
+
+  function toggleSidebar(){
+    sidebar.classList.toggle('show');
+    overlay.classList.toggle('show');
+  }
+  toggleBtn?.addEventListener('click', toggleSidebar);
+  overlay?.addEventListener('click', toggleSidebar);
+</script>
+
+</body>
+</html>

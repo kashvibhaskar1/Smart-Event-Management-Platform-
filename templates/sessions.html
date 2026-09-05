@@ -1,0 +1,618 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Sessions | Registration Command Center</title>
+
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600;700&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+
+<link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.css">
+
+<link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+</head>
+<body>
+
+<div class="sidebar-overlay" id="sidebarOverlay"></div>
+
+<aside class="sidebar" id="sidebar">
+  <div class="sidebar-brand">
+    <div class="brand-mark">RI</div>
+    <div class="brand-text">
+      <div class="brand-title">Registration Intelligence</div>
+      <div class="brand-sub">Attendee Management</div>
+    </div>
+  </div>
+  <div class="sidebar-divider"></div>
+
+  <nav class="sidebar-nav">
+    <div class="sidebar-label">Main</div>
+    <a href="/dashboard" class="nav-item-link"><i class="bi bi-speedometer2"></i> Dashboard</a>
+    <a href="/register" class="nav-item-link"><i class="bi bi-person-plus"></i> Registrations</a>
+    <a href="/attendees" class="nav-item-link"><i class="bi bi-people"></i> Attendees</a>
+    <a href="/venues" class="nav-item-link"><i class="bi bi-building"></i> Venues</a>
+    <a href="/speakers" class="nav-item-link"><i class="bi bi-mic"></i> Speakers</a>
+    <a href="/sessions" class="nav-item-link active"><i class="bi bi-calendar3"></i> Sessions</a>
+    <a href="/sponsors" class="nav-item-link"><i class="bi bi-briefcase"></i> Sponsors <span class="badge-mini">New</span></a>
+    <a href="/analytics" class="nav-item-link"><i class="bi bi-graph-up-arrow"></i> Analytics</a>
+
+    <div class="sidebar-label mt-3">Intelligence</div>
+    <a href="/intelligence" class="nav-item-link"><i class="bi bi-cpu"></i> Intelligence Engine <span class="badge-mini">New</span></a>
+    <a href="/ai_insights" class="nav-item-link"><i class="bi bi-stars"></i> AI Insights</a>
+  </nav>
+
+  <div class="sidebar-footer">
+    <div class="upgrade-card">
+      <i class="bi bi-shield-check me-1"></i> All systems operational
+    </div>
+  </div>
+</aside>
+
+<header class="topbar">
+  <button class="sidebar-toggle-btn" id="sidebarToggle" aria-label="Toggle sidebar">
+    <i class="bi bi-list fs-5"></i>
+  </button>
+  <div class="search-wrap">
+    <i class="bi bi-search"></i>
+    <input type="text" class="search-input" placeholder="Search attendees, emails, IDs…">
+  </div>
+  <div class="topbar-right">
+    <div class="dropdown">
+      <div class="admin-profile" data-bs-toggle="dropdown" aria-expanded="false">
+        <div class="admin-avatar">AD</div>
+        <div class="admin-name">
+          <div class="name">Admin User</div>
+          <div class="role">Super Admin</div>
+        </div>
+        <i class="bi bi-chevron-down text-secondary" style="font-size:.7rem;"></i>
+      </div>
+      <ul class="dropdown-menu dropdown-menu-end mt-2">
+        <li><a class="dropdown-item" href="/logout"><i class="bi bi-box-arrow-right me-2"></i>Sign out</a></li>
+      </ul>
+    </div>
+  </div>
+</header>
+
+<main class="main-content">
+
+  <div class="page-heading">
+    <div>
+      <h1>Sessions</h1>
+      <p>Create sessions and assign an existing venue and speaker to each one.</p>
+    </div>
+    <div>
+      <button type="button" class="btn-primary-solid" data-bs-toggle="modal" data-bs-target="#addSessionModal">
+        <i class="bi bi-plus-lg"></i> Add Session
+      </button>
+    </div>
+  </div>
+
+  <!-- Flash messages -->
+  {% with messages = get_flashed_messages(with_categories=true) %}
+    {% if messages %}
+      {% for category, message in messages %}
+        <div class="alert-box {% if category == 'success' %}alert-success{% else %}alert-error{% endif %}" style="margin-bottom:1rem;">
+          <i class="bi {% if category == 'success' %}bi-check-circle-fill{% else %}bi-exclamation-triangle-fill{% endif %}"></i>
+          <span>{{ message }}</span>
+        </div>
+      {% endfor %}
+    {% endif %}
+  {% endwith %}
+
+  <!-- Search -->
+  <div class="table-panel mb-3">
+    <div class="panel-header">
+      <div>
+        <h2>Search Sessions</h2>
+        <div class="panel-sub">Search by title or topic</div>
+      </div>
+    </div>
+    <form method="GET" action="/sessions" class="row g-2 align-items-end">
+      <div class="col-md-9">
+        <label class="form-label" style="font-size:.78rem;font-weight:600;color:var(--text-secondary);">Title or Topic</label>
+        <input type="text" name="q" class="form-input" placeholder="e.g. Cloud Migration" value="{{ search_query }}">
+      </div>
+      <div class="col-md-3">
+        <button type="submit" class="btn-primary-solid" style="width:100%;justify-content:center;"><i class="bi bi-search"></i> Search</button>
+      </div>
+    </form>
+  </div>
+
+  <!-- Results -->
+  <div class="table-panel mb-4">
+    <div class="panel-header">
+      <div>
+        <h2>Session List</h2>
+        <div class="panel-sub">{{ sessions|length }} session(s) found</div>
+      </div>
+    </div>
+
+    <div class="table-responsive">
+      <table class="reg-table">
+        <thead>
+          <tr>
+            <th>Title</th>
+            <th>Date</th>
+            <th>Time</th>
+            <th>Venue</th>
+            <th>Speaker</th>
+            <th>Required Expertise</th>
+            <th>Status</th>
+            <th class="text-end">Actions</th>
+          </tr>
+        </thead>
+        <tbody>
+          {% for s in sessions %}
+          <tr>
+            <td>
+              <strong>{{ s.title }}</strong>
+              {% if s.description %}<div class="text-muted" style="font-size:.74rem;margin-top:.15rem;">{{ s.description }}</div>{% endif %}
+            </td>
+            <td>{{ s.date }}</td>
+            <td>{{ s.start_time.strftime('%H:%M') }} &ndash; {{ s.end_time.strftime('%H:%M') }}</td>
+            <td>{{ s.venue.name if s.venue else "Not assigned" }}</td>
+            <td>{{ s.speaker.name if s.speaker else "Not assigned" }}</td>
+            <td>{{ s.required_expertise or "—" }}</td>
+            <td>
+              {% if s.status == "Scheduled" %}
+                <span class="status-badge registered"><span class="dot-sm"></span>Scheduled</span>
+              {% elif s.status == "Confirmed" %}
+                <span class="status-badge checked-in"><span class="dot-sm"></span>Confirmed</span>
+              {% elif s.status == "Cancelled" %}
+                <span class="status-badge" style="background:var(--danger-soft);color:var(--danger);"><span class="dot-sm" style="background:var(--danger);"></span>Cancelled</span>
+              {% else %}
+                <span class="status-badge" style="background:var(--slate-soft);color:var(--slate);"><span class="dot-sm" style="background:var(--slate);"></span>{{ s.status }}</span>
+              {% endif %}
+            </td>
+            <td class="text-end">
+              <div class="row-actions justify-content-end">
+                <button type="button" class="action-btn" data-bs-toggle="modal" data-bs-target="#editSessionModal"
+                        data-session-id="{{ s.id }}"
+                        data-session-title="{{ s.title }}"
+                        data-session-description="{{ s.description or '' }}"
+                        data-session-date="{{ s.date }}"
+                        data-session-start="{{ s.start_time.strftime('%H:%M') }}"
+                        data-session-end="{{ s.end_time.strftime('%H:%M') }}"
+                        data-session-venue="{{ s.venue_id or '' }}"
+                        data-session-speaker="{{ s.speaker_id or '' }}"
+                        data-session-expertise="{{ s.required_expertise or '' }}"
+                        data-session-status="{{ s.status }}"
+                        aria-label="Edit session" title="Edit session">
+                  <i class="bi bi-pencil"></i>
+                </button>
+                <form method="POST" action="/sessions/{{ s.id }}/delete" onsubmit="return confirm('Delete session \'{{ s.title }}\'? This cannot be undone.');" style="display:inline;">
+                  <button type="submit" class="action-btn" aria-label="Delete session" title="Delete session">
+                    <i class="bi bi-trash"></i>
+                  </button>
+                </form>
+                {% if s.status != "Cancelled" %}
+                <form method="POST" action="/sessions/{{ s.id }}/cancel" onsubmit="return confirm('Cancel \'{{ s.title }}\'? Affected attendees will be identified, an incident will be created, and the event manager will be alerted.');" style="display:inline;">
+                  <button type="submit" class="action-btn" style="color:var(--danger);" aria-label="Cancel session" title="Cancel session">
+                    <i class="bi bi-x-octagon"></i>
+                  </button>
+                </form>
+                {% endif %}
+              </div>
+            </td>
+          </tr>
+          {% else %}
+          <tr>
+            <td colspan="8">
+              <div class="empty-state">
+                <i class="bi bi-calendar3"></i>
+                No sessions match your search. Try a different title or topic.
+              </div>
+            </td>
+          </tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    </div>
+  </div>
+
+  <!-- ============ SESSION ANALYTICS ============ -->
+  {% if session_analytics.has_data %}
+  <div class="ai-panel mb-4">
+    <div class="d-flex align-items-center gap-3 mb-3">
+      <div class="ai-panel-header-icon"><i class="bi bi-bar-chart-line"></i></div>
+      <div>
+        <h2 class="mb-0" style="font-size:.98rem;font-weight:600;">Session Analytics</h2>
+        <div class="panel-sub">Calculated live from all session records &mdash; updates automatically</div>
+      </div>
+    </div>
+
+    <!-- Key stats -->
+    <div class="row g-3 mb-3">
+      <div class="col-6 col-xl-3">
+        <div class="ai-insight-card">
+          <div class="ai-insight-icon" style="background:var(--blue-soft);color:var(--blue);"><i class="bi bi-calendar3"></i></div>
+          <p>Total Sessions: <strong>{{ session_analytics.total_sessions }}</strong></p>
+        </div>
+      </div>
+      <div class="col-6 col-xl-3">
+        <div class="ai-insight-card">
+          <div class="ai-insight-icon" style="background:var(--success-soft);color:var(--success);"><i class="bi bi-calendar-check"></i></div>
+          <p>Scheduled Sessions: <strong>{{ session_analytics.scheduled_count }}</strong></p>
+        </div>
+      </div>
+      <div class="col-6 col-xl-3">
+        <div class="ai-insight-card">
+          <div class="ai-insight-icon" style="background:var(--purple-soft);color:var(--purple);"><i class="bi bi-clock-history"></i></div>
+          <p>Total Scheduled Hours: <strong>{{ session_analytics.total_hours }} hrs</strong></p>
+        </div>
+      </div>
+      <div class="col-6 col-xl-3">
+        <div class="ai-insight-card">
+          <div class="ai-insight-icon" style="background:var(--slate-soft);color:var(--slate);"><i class="bi bi-hourglass-split"></i></div>
+          <p>Avg. Session Duration: <strong>{{ session_analytics.avg_hours }} hrs</strong></p>
+        </div>
+      </div>
+      <div class="col-6 col-xl-3">
+        <div class="ai-insight-card">
+          <div class="ai-insight-icon" style="background:var(--blue-soft);color:var(--blue);"><i class="bi bi-building"></i></div>
+          <p>Most Used Venue: <strong>{{ session_analytics.most_used_venue }}</strong></p>
+        </div>
+      </div>
+      <div class="col-6 col-xl-3">
+        <div class="ai-insight-card">
+          <div class="ai-insight-icon" style="background:var(--purple-soft);color:var(--purple);"><i class="bi bi-mic"></i></div>
+          <p>Most Assigned Speaker: <strong>{{ session_analytics.top_speaker }}</strong></p>
+        </div>
+      </div>
+    </div>
+
+    <!-- Breakdown bars: Sessions by Venue / Speaker / Topic -->
+    <div class="row g-3">
+      <div class="col-md-4">
+        <div class="ai-insight-card" style="height:100%;">
+          <div style="font-size:.72rem;font-weight:600;letter-spacing:.5px;text-transform:uppercase;color:var(--text-muted);margin-bottom:.7rem;">Sessions by Venue</div>
+          {% if session_analytics.by_venue %}
+            {% for row in session_analytics.by_venue %}
+            <div class="mb-2">
+              <div class="d-flex justify-content-between" style="font-size:.78rem;color:var(--text-secondary);margin-bottom:.2rem;">
+                <span>{{ row.label }}</span><span>{{ row.count }}</span>
+              </div>
+              <div style="background:var(--border);border-radius:4px;height:6px;overflow:hidden;">
+                <div style="width:{{ row.pct }}%;background:var(--blue);height:100%;border-radius:4px;"></div>
+              </div>
+            </div>
+            {% endfor %}
+          {% else %}
+            <div class="text-muted" style="font-size:.78rem;">No venue-assigned sessions yet.</div>
+          {% endif %}
+        </div>
+      </div>
+      <div class="col-md-4">
+        <div class="ai-insight-card" style="height:100%;">
+          <div style="font-size:.72rem;font-weight:600;letter-spacing:.5px;text-transform:uppercase;color:var(--text-muted);margin-bottom:.7rem;">Sessions by Speaker</div>
+          {% if session_analytics.by_speaker %}
+            {% for row in session_analytics.by_speaker %}
+            <div class="mb-2">
+              <div class="d-flex justify-content-between" style="font-size:.78rem;color:var(--text-secondary);margin-bottom:.2rem;">
+                <span>{{ row.label }}</span><span>{{ row.count }}</span>
+              </div>
+              <div style="background:var(--border);border-radius:4px;height:6px;overflow:hidden;">
+                <div style="width:{{ row.pct }}%;background:var(--success);height:100%;border-radius:4px;"></div>
+              </div>
+            </div>
+            {% endfor %}
+          {% else %}
+            <div class="text-muted" style="font-size:.78rem;">No speaker-assigned sessions yet.</div>
+          {% endif %}
+        </div>
+      </div>
+      <div class="col-md-4">
+        <div class="ai-insight-card" style="height:100%;">
+          <div style="font-size:.72rem;font-weight:600;letter-spacing:.5px;text-transform:uppercase;color:var(--text-muted);margin-bottom:.7rem;">Sessions by Topic</div>
+          {% if session_analytics.by_topic %}
+            {% for row in session_analytics.by_topic %}
+            <div class="mb-2">
+              <div class="d-flex justify-content-between" style="font-size:.78rem;color:var(--text-secondary);margin-bottom:.2rem;">
+                <span>{{ row.label }}</span><span>{{ row.count }}</span>
+              </div>
+              <div style="background:var(--border);border-radius:4px;height:6px;overflow:hidden;">
+                <div style="width:{{ row.pct }}%;background:var(--purple);height:100%;border-radius:4px;"></div>
+              </div>
+            </div>
+            {% endfor %}
+          {% else %}
+            <div class="text-muted" style="font-size:.78rem;">No topic (required expertise) data yet.</div>
+          {% endif %}
+        </div>
+      </div>
+    </div>
+  </div>
+  {% else %}
+  <div class="table-panel mb-4">
+    <div class="empty-state">
+      <i class="bi bi-bar-chart-line"></i>
+      No session data available yet.
+    </div>
+  </div>
+  {% endif %}
+
+</main>
+
+<!-- Add Session Modal -->
+<div class="modal fade" id="addSessionModal" tabindex="-1" aria-hidden="true">
+  <div class="modal-dialog">
+    <div class="modal-content" style="border-radius: var(--radius-lg); border: 1px solid var(--border);">
+      <form method="POST" action="/sessions/add">
+        <div class="modal-header">
+          <h5 class="modal-title">Add New Session</h5>
+          <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+        </div>
+        <div class="modal-body">
+          <div class="form-group full mb-3">
+            <label class="form-label" for="a_title"><i class="bi bi-calendar-event"></i> Title <span class="req">*</span></label>
+            <input type="text" class="form-input" id="a_title" name="title" placeholder="e.g. Scaling with Cloud Native Architecture" required>
+          </div>
+          <div class="form-group full mb-3">
+            <label class="form-label" for="a_description">Description / Topic</label>
+            <textarea class="form-input" id="a_description" name="description" rows="2" placeholder="Short summary of what the session covers"></textarea>
+          </div>
+          <div class="row g-2 mb-3">
+            <div class="col-4">
+              <label class="form-label" for="a_date">Date <span class="req">*</span></label>
+              <input type="date" class="form-input" id="a_date" name="date" required>
+            </div>
+            <div class="col-4">
+              <label class="form-label" for="a_start">Start Time <span class="req">*</span></label>
+              <input type="time" class="form-input" id="a_start" name="start_time" required>
+            </div>
+            <div class="col-4">
+              <label class="form-label" for="a_end">End Time <span class="req">*</span></label>
+              <input type="time" class="form-input" id="a_end" name="end_time" required>
+            </div>
+          </div>
+          <div class="row g-2 mb-3">
+            <div class="col-6">
+              <label class="form-label" for="a_venue"><i class="bi bi-building"></i> Venue</label>
+              <select class="form-input" id="a_venue" name="venue_id">
+                <option value="">Not assigned</option>
+                {% for v in venues %}
+                  <option value="{{ v.id }}">{{ v.name }} ({{ v.location }})</option>
+                {% endfor %}
+              </select>
+            </div>
+            <div class="col-6">
+              <label class="form-label" for="a_speaker"><i class="bi bi-mic"></i> Speaker</label>
+              <select class="form-input" id="a_speaker" name="speaker_id">
+                <option value="">Not assigned</option>
+                {% for sp in speakers %}
+                  <option value="{{ sp.id }}">{{ sp.name }}{% if sp.expertise %} — {{ sp.expertise }}{% endif %}</option>
+                {% endfor %}
+              </select>
+            </div>
+          </div>
+          <div class="form-group full mb-3">
+            <label class="form-label" for="a_expertise"><i class="bi bi-lightbulb"></i> Required Expertise</label>
+            <input type="text" class="form-input" id="a_expertise" name="required_expertise" placeholder="e.g. Cloud Computing, DevOps">
+          </div>
+          <div class="form-group full mb-3">
+            <button type="button" class="btn-export" style="width:100%;justify-content:center;" onclick="fetchSpeakerRecommendations('a')">
+              <i class="bi bi-stars"></i> Recommend Speaker
+            </button>
+            <div id="a_rec_results" class="mt-2"></div>
+          </div>
+          <div class="form-group full">
+            <label class="form-label">Status</label>
+            <select class="form-input" name="status">
+              <option value="Scheduled" selected>Scheduled</option>
+              <option value="Confirmed">Confirmed</option>
+              <option value="Cancelled">Cancelled</option>
+            </select>
+          </div>
+        </div>
+        <div class="modal-footer">
+          <button type="button" class="btn-export" data-bs-dismiss="modal">Cancel</button>
+          <button type="submit" class="btn-primary-solid"><i class="bi bi-check2-circle"></i> Save Session</button>
+        </div>
+      </form>
+    </div>
+  </div>
+</div>
+
+<!-- Edit Session Modal -->
+<div class="modal fade" id="editSessionModal" tabindex="-1" aria-hidden="true">
+  <div class="modal-dialog">
+    <div class="modal-content" style="border-radius: var(--radius-lg); border: 1px solid var(--border);">
+      <form method="POST" id="editSessionForm" action="/sessions/0/edit">
+        <div class="modal-header">
+          <h5 class="modal-title">Edit Session</h5>
+          <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+        </div>
+        <div class="modal-body">
+          <div class="form-group full mb-3">
+            <label class="form-label" for="e_title"><i class="bi bi-calendar-event"></i> Title <span class="req">*</span></label>
+            <input type="text" class="form-input" id="e_title" name="title" required>
+          </div>
+          <div class="form-group full mb-3">
+            <label class="form-label" for="e_description">Description / Topic</label>
+            <textarea class="form-input" id="e_description" name="description" rows="2"></textarea>
+          </div>
+          <div class="row g-2 mb-3">
+            <div class="col-4">
+              <label class="form-label" for="e_date">Date <span class="req">*</span></label>
+              <input type="date" class="form-input" id="e_date" name="date" required>
+            </div>
+            <div class="col-4">
+              <label class="form-label" for="e_start">Start Time <span class="req">*</span></label>
+              <input type="time" class="form-input" id="e_start" name="start_time" required>
+            </div>
+            <div class="col-4">
+              <label class="form-label" for="e_end">End Time <span class="req">*</span></label>
+              <input type="time" class="form-input" id="e_end" name="end_time" required>
+            </div>
+          </div>
+          <div class="row g-2 mb-3">
+            <div class="col-6">
+              <label class="form-label" for="e_venue"><i class="bi bi-building"></i> Venue</label>
+              <select class="form-input" id="e_venue" name="venue_id">
+                <option value="">Not assigned</option>
+                {% for v in venues %}
+                  <option value="{{ v.id }}">{{ v.name }} ({{ v.location }})</option>
+                {% endfor %}
+              </select>
+            </div>
+            <div class="col-6">
+              <label class="form-label" for="e_speaker"><i class="bi bi-mic"></i> Speaker</label>
+              <select class="form-input" id="e_speaker" name="speaker_id">
+                <option value="">Not assigned</option>
+                {% for sp in speakers %}
+                  <option value="{{ sp.id }}">{{ sp.name }}{% if sp.expertise %} — {{ sp.expertise }}{% endif %}</option>
+                {% endfor %}
+              </select>
+            </div>
+          </div>
+          <div class="form-group full mb-3">
+            <label class="form-label" for="e_expertise"><i class="bi bi-lightbulb"></i> Required Expertise</label>
+            <input type="text" class="form-input" id="e_expertise" name="required_expertise">
+          </div>
+          <div class="form-group full mb-3">
+            <button type="button" class="btn-export" style="width:100%;justify-content:center;" onclick="fetchSpeakerRecommendations('e')">
+              <i class="bi bi-stars"></i> Recommend Speaker
+            </button>
+            <div id="e_rec_results" class="mt-2"></div>
+          </div>
+          <div class="form-group full">
+            <label class="form-label">Status</label>
+            <select class="form-input" name="status" id="e_status">
+              <option value="Scheduled">Scheduled</option>
+              <option value="Confirmed">Confirmed</option>
+              <option value="Cancelled">Cancelled</option>
+            </select>
+          </div>
+        </div>
+        <div class="modal-footer">
+          <button type="button" class="btn-export" data-bs-dismiss="modal">Cancel</button>
+          <button type="submit" class="btn-primary-solid"><i class="bi bi-check2-circle"></i> Save Changes</button>
+        </div>
+      </form>
+    </div>
+  </div>
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+<script>
+  const sidebar = document.getElementById('sidebar');
+  const overlay = document.getElementById('sidebarOverlay');
+  document.getElementById('sidebarToggle')?.addEventListener('click', () => {
+    sidebar.classList.toggle('show');
+    overlay.classList.toggle('show');
+  });
+  overlay?.addEventListener('click', () => {
+    sidebar.classList.remove('show');
+    overlay.classList.remove('show');
+  });
+
+  // Populate the Edit Session modal from the clicked row's data-* attributes
+  const editSessionModal = document.getElementById('editSessionModal');
+  editSessionModal.addEventListener('show.bs.modal', function (event) {
+    const btn = event.relatedTarget;
+    const sessionId = btn.getAttribute('data-session-id');
+
+    document.getElementById('editSessionForm').action = `/sessions/${sessionId}/edit`;
+    document.getElementById('e_title').value = btn.getAttribute('data-session-title');
+    document.getElementById('e_description').value = btn.getAttribute('data-session-description');
+    document.getElementById('e_date').value = btn.getAttribute('data-session-date');
+    document.getElementById('e_start').value = btn.getAttribute('data-session-start');
+    document.getElementById('e_end').value = btn.getAttribute('data-session-end');
+    document.getElementById('e_venue').value = btn.getAttribute('data-session-venue');
+    document.getElementById('e_speaker').value = btn.getAttribute('data-session-speaker');
+    document.getElementById('e_expertise').value = btn.getAttribute('data-session-expertise');
+    document.getElementById('e_status').value = btn.getAttribute('data-session-status');
+    // Clear any stale recommendation results from a previous open of this modal
+    document.getElementById('e_rec_results').innerHTML = '';
+  });
+
+  // ---- Speaker Recommendation (used by both Add and Edit modals) ----
+  // prefix is 'a' for Add Session, 'e' for Edit Session — reuses the same
+  // field IDs/results container pattern already used for editVenueModal etc.
+  async function fetchSpeakerRecommendations(prefix) {
+    const title = document.getElementById(prefix + '_title').value.trim();
+    const expertise = document.getElementById(prefix + '_expertise').value.trim();
+    const date = document.getElementById(prefix + '_date').value;
+    const startTime = document.getElementById(prefix + '_start').value;
+    const endTime = document.getElementById(prefix + '_end').value;
+    const resultsBox = document.getElementById(prefix + '_rec_results');
+
+    if (!date || !startTime || !endTime) {
+      resultsBox.innerHTML = '<div class="alert-box alert-error"><i class="bi bi-exclamation-triangle-fill"></i><span>Please fill in Date, Start Time and End Time first.</span></div>';
+      return;
+    }
+
+    let excludeSessionId = '';
+    if (prefix === 'e') {
+      // Pull the session id out of the edit form's action URL: /sessions/<id>/edit
+      const match = document.getElementById('editSessionForm').action.match(/\/sessions\/(\d+)\/edit/);
+      if (match) excludeSessionId = match[1];
+    }
+
+    resultsBox.innerHTML = '<div class="text-muted" style="font-size:.82rem;padding:.5rem 0;"><i class="bi bi-hourglass-split"></i> Finding recommended speakers…</div>';
+
+    const params = new URLSearchParams({
+      title: title, required_expertise: expertise, date: date,
+      start_time: startTime, end_time: endTime, exclude_session_id: excludeSessionId
+    });
+
+    try {
+      const res = await fetch('/sessions/recommend_speaker?' + params.toString());
+      const data = await res.json();
+
+      if (!res.ok) {
+        resultsBox.innerHTML = `<div class="alert-box alert-error"><i class="bi bi-exclamation-triangle-fill"></i><span>${data.error || 'Could not fetch recommendations.'}</span></div>`;
+        return;
+      }
+
+      if (data.no_candidates) {
+        resultsBox.innerHTML = '<div class="empty-state" style="padding:1.2rem;"><i class="bi bi-mic"></i>No suitable speakers found.</div>';
+        return;
+      }
+
+      let html = '';
+      if (data.all_unavailable) {
+        html += '<div class="alert-box alert-error" style="margin-bottom:.6rem;"><i class="bi bi-exclamation-triangle-fill"></i><span>Suitable speakers found, but none are available at this time.</span></div>';
+      }
+
+      data.recommendations.forEach(rec => {
+        const badge = rec.available
+          ? '<span class="status-badge checked-in"><span class="dot-sm"></span>Available</span>'
+          : '<span class="status-badge" style="background:var(--danger-soft);color:var(--danger);"><span class="dot-sm" style="background:var(--danger);"></span>Unavailable</span>';
+        const assignBtn = rec.available
+          ? `<button type="button" class="btn-export" style="margin-top:.5rem;" onclick="assignRecommendedSpeaker('${prefix}', ${rec.id})"><i class="bi bi-check2-circle"></i> Assign</button>`
+          : '';
+        html += `
+          <div class="ai-insight-card mb-2" style="padding:.9rem 1rem;">
+            <div class="d-flex justify-content-between align-items-start gap-2">
+              <div>
+                <div style="font-weight:600;font-size:.88rem;color:var(--text-primary);">${rec.name}</div>
+                <div class="text-muted" style="font-size:.76rem;">${rec.expertise || '—'}</div>
+              </div>
+              <div class="stat-value" style="font-size:1.1rem;line-height:1;">${rec.score}%</div>
+            </div>
+            <div class="mt-2 mb-1">${badge}</div>
+            <div style="font-size:.78rem;color:var(--text-secondary);">${rec.reason}</div>
+            ${assignBtn}
+          </div>`;
+      });
+      resultsBox.innerHTML = html;
+    } catch (err) {
+      resultsBox.innerHTML = '<div class="alert-box alert-error"><i class="bi bi-exclamation-triangle-fill"></i><span>Something went wrong fetching recommendations.</span></div>';
+    }
+  }
+
+  // Assign just pre-fills the Speaker dropdown — the actual save still goes
+  // through the existing Save Session / Save Changes button and its normal
+  // add_session/edit_session validation + conflict check.
+  function assignRecommendedSpeaker(prefix, speakerId) {
+    const select = document.getElementById(prefix + '_speaker');
+    select.value = speakerId;
+  }
+</script>
+
+</body>
+</html>
